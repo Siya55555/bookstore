@@ -1,73 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
     // This script will be specific to the shop page functionality.
 
-    // --- Product Data (could be fetched from an API in a real application) ---
-    const allBooks = [
-        { id: 1, title: 'The Alchemist', author: 'Paulo Coelho', price: 199, image: 'assets/images/books/book1.jpg', category: 'fiction', rating: 4.5, reviews: 1250 },
-        { id: 2, title: 'Sapiens', author: 'Yuval Noah Harari', price: 299, image: 'assets/images/books/book2.jpg', category: 'non-fiction', rating: 4.7, reviews: 890 },
-        { id: 3, title: 'To Kill a Mockingbird', author: 'Harper Lee', price: 249, image: 'assets/images/books/book3.jpg', category: 'fiction', rating: 4.8, reviews: 2100 },
-        { id: 4, title: '1984', author: 'George Orwell', price: 180, image: 'assets/images/books/book4.jpg', category: 'fiction', rating: 4.6, reviews: 1650 },
-        { id: 5, title: 'The Power of Habit', author: 'Charles Duhigg', price: 280, image: 'assets/images/books/book5.jpg', category: 'non-fiction', rating: 4.3, reviews: 750 },
-        { id: 6, title: 'Becoming', author: 'Michelle Obama', price: 350, image: 'assets/images/books/book6.jpg', category: 'biography', rating: 4.9, reviews: 3200 },
-        { id: 7, title: 'The Lord of the Rings', author: 'J.R.R. Tolkien', price: 450, image: 'assets/images/books/book7.jpg', category: 'fantasy', rating: 4.8, reviews: 2800 },
-        { id: 8, title: 'Atomic Habits', author: 'James Clear', price: 260, image: 'assets/images/books/book8.jpg', category: 'non-fiction', rating: 4.4, reviews: 1100 }
-    ];
+    // --- API Configuration ---
+    const API_BASE_URL = 'http://localhost:5000/api';
 
-    const shopGrid = document.getElementById('shop-grid');
-    const authorFilter = document.getElementById('author-filter');
+    const booksGrid = document.getElementById('shop-grid');
+    const categoryFilter = document.getElementById('category-filter');
     const priceFilter = document.getElementById('price-filter');
+    const sortSelect = document.getElementById('sort-filter');
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
     const priceValue = document.getElementById('price-value');
-    const sortFilter = document.getElementById('sort-filter');
-    const resultsCount = document.getElementById('results-count');
     const clearFiltersBtn = document.getElementById('clear-filters');
 
-    let currentFilters = {
-        category: 'all',
-        author: 'all',
-        maxPrice: 500,
-        minRating: 0,
-        sortBy: 'default'
+    let currentBooks = [];
+    let filteredBooks = [];
+
+    // --- API Helper Functions ---
+    const apiCall = async (endpoint, options = {}) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...options.headers
+                },
+                ...options
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
     };
 
-    // --- Render Functions ---
-    const renderBooks = (books) => {
-        if (!shopGrid) return;
-        
-        if (books.length === 0) {
-            shopGrid.innerHTML = `
-                <div class="col-12 text-center py-5">
-                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                    <h4>No books found</h4>
-                    <p class="text-muted">Try adjusting your filters or search criteria.</p>
-                </div>
-            `;
-            return;
+    // Health check function
+    const checkServerHealth = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/health`);
+            const data = await response.json();
+            console.log('Server health check:', data);
+            return true;
+        } catch (error) {
+            console.error('Server health check failed:', error);
+            return false;
         }
-
-        shopGrid.innerHTML = books.map(book => `
-            <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                <div class="book-card" data-id="${book.id}">
-                    <a href="book.html?id=${book.id}" class="book-card-link">
-                        <img src="${book.image}" alt="${book.title}" class="book-card-img">
-                        <div class="book-card-body">
-                            <h5 class="book-card-title">${book.title}</h5>
-                            <p class="book-card-author">by ${book.author}</p>
-                            <div class="book-rating">
-                                <span class="rating-stars">${getStarRating(book.rating)}</span>
-                                <span class="rating-text">(${book.reviews} reviews)</span>
-                            </div>
-                            <p class="book-card-price">₹${book.price}</p>
-                        </div>
-                    </a>
-                    <div class="book-card-actions">
-                        <button class="btn btn-primary btn-sm add-to-cart-btn">Add to Cart</button>
-                        <button class="btn btn-outline-danger btn-sm add-to-wishlist-btn">
-                            <i class="far fa-heart"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
     };
 
     const getStarRating = (rating) => {
@@ -78,146 +61,424 @@ document.addEventListener('DOMContentLoaded', () => {
         return '★'.repeat(fullStars) + (hasHalfStar ? '☆' : '') + '☆'.repeat(emptyStars);
     };
 
-    const populateAuthors = () => {
-        if (!authorFilter) return;
-        const authors = [...new Set(allBooks.map(book => book.author))];
-        authors.forEach(author => {
-            const option = document.createElement('option');
-            option.value = author;
-            option.textContent = author;
-            authorFilter.appendChild(option);
-        });
+    const renderBooks = (books) => {
+        console.log('Rendering books:', books);
+        console.log('Books grid element:', booksGrid);
+        
+        if (!booksGrid) {
+            console.error('Books grid element not found!');
+            return;
+        }
+
+        if (books.length === 0) {
+            console.log('No books to render');
+            booksGrid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h3>No books found</h3>
+                    <p>Try adjusting your filters or search terms.</p>
+                </div>
+            `;
+            document.getElementById('main-content').classList.remove('hidden');
+            document.body.classList.remove('body-hidden');
+            return;
+        }
+
+        console.log('Rendering', books.length, 'books');
+        const booksHTML = books.map(book => {
+            // Determine badge type
+            let badge = '';
+            if (book.isFeatured) {
+                badge = '<span class="badge badge-featured">Featured</span>';
+            } else if (book.isNewRelease) {
+                badge = '<span class="badge badge-new">New</span>';
+            } else if (book.isBestSeller) {
+                badge = '<span class="badge badge-bestseller">Bestseller</span>';
+            }
+
+            // Stock status indicator
+            let stockStatus = '';
+            if (book.stockQuantity === 0) {
+                stockStatus = '<span class="stock-status stock-out">Out of Stock</span>';
+            } else if (book.stockQuantity <= 5) {
+                stockStatus = '<span class="stock-status stock-low">Low Stock</span>';
+            } else {
+                stockStatus = '<span class="stock-status stock-in">In Stock</span>';
+            }
+
+            // Calculate discount if original price exists
+            let priceDisplay = `<div class="shop-book-card-price">₹${book.price}</div>`;
+            if (book.originalPrice && book.originalPrice > book.price) {
+                const discount = Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100);
+                priceDisplay = `
+                    <div class="price-display">
+                        <span class="current-price">₹${book.price}</span>
+                        <span class="original-price">₹${book.originalPrice}</span>
+                        <span class="discount-badge">-${discount}%</span>
+                    </div>
+                `;
+            }
+
+            // Check if book is in wishlist
+            const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+            const isInWishlist = wishlist.includes(book._id);
+            const heartIcon = isInWishlist ? 'fas' : 'far';
+
+            const bookHTML = `
+                <div class="shop-book-card" data-id="${book._id}">
+                    ${badge}
+                    ${stockStatus}
+                    <a href="/book.html?id=${book._id}">
+                        <img src="${book.coverImage}" alt="${book.title}" class="shop-book-card-img">
+                        <div class="shop-book-card-body">
+                            <div>
+                                <h5 class="shop-book-card-title">${book.title}</h5>
+                                <p class="shop-book-card-author">by ${book.author}</p>
+                                <div class="shop-book-rating">
+                                    <span class="shop-rating-stars">${getStarRating(book.averageRating)}</span>
+                                    <span class="shop-rating-text">(${book.totalReviews} reviews)</span>
+                                </div>
+                                ${priceDisplay}
+                            </div>
+                        </div>
+                    </a>
+                    <div class="shop-book-card-actions">
+                        <button class="btn btn-primary btn-sm add-to-cart-btn" ${book.stockQuantity === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-shopping-cart me-1"></i>
+                            ${book.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm add-to-wishlist-btn">
+                            <i class="${heartIcon} fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            console.log(`Generated HTML for book ${book.title}:`, bookHTML);
+            return bookHTML;
+        }).join('');
+        
+        console.log('Generated HTML:', booksHTML);
+        booksGrid.innerHTML = booksHTML;
+        document.getElementById('main-content').classList.remove('hidden');
+        document.body.classList.remove('body-hidden');
     };
 
-    // --- Filtering and Sorting Logic ---
-    const applyFilters = () => {
-        let filteredBooks = [...allBooks];
+    const filterBooks = () => {
+        let filtered = [...currentBooks];
 
-        // Filter by category
-        if (currentFilters.category !== 'all') {
-            filteredBooks = filteredBooks.filter(book => book.category === currentFilters.category);
+        // Category filter - get selected radio button
+        const selectedCategoryRadio = document.querySelector('input[name="category"]:checked');
+        const selectedCategory = selectedCategoryRadio ? selectedCategoryRadio.value : 'all';
+        if (selectedCategory && selectedCategory !== 'all') {
+            filtered = filtered.filter(book => book.category.toLowerCase() === selectedCategory.toLowerCase());
         }
 
-        // Filter by author
-        if (currentFilters.author !== 'all') {
-            filteredBooks = filteredBooks.filter(book => book.author === currentFilters.author);
+        // Price filter
+        const selectedPrice = priceFilter.value;
+        if (selectedPrice) {
+            filtered = filtered.filter(book => book.price <= selectedPrice);
         }
 
-        // Filter by price
-        filteredBooks = filteredBooks.filter(book => book.price <= currentFilters.maxPrice);
-
-        // Filter by rating
-        if (currentFilters.minRating > 0) {
-            filteredBooks = filteredBooks.filter(book => book.rating >= currentFilters.minRating);
+        // Rating filter - get selected radio button
+        const selectedRatingRadio = document.querySelector('input[name="rating"]:checked');
+        const selectedRating = selectedRatingRadio ? selectedRatingRadio.value : 'all';
+        if (selectedRating && selectedRating !== 'all') {
+            filtered = filtered.filter(book => book.averageRating >= parseInt(selectedRating));
         }
 
-        // Sort books
-        switch (currentFilters.sortBy) {
+        // Search filter
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        if (searchQuery) {
+            filtered = filtered.filter(book => 
+                book.title.toLowerCase().includes(searchQuery) ||
+                book.author.toLowerCase().includes(searchQuery) ||
+                (book.category && book.category.toLowerCase().includes(searchQuery))
+            );
+        }
+
+        // Sort
+        const sortBy = sortSelect ? sortSelect.value : 'default';
+        switch (sortBy) {
             case 'price-asc':
-                filteredBooks.sort((a, b) => a.price - b.price);
+                filtered.sort((a, b) => a.price - b.price);
                 break;
             case 'price-desc':
-                filteredBooks.sort((a, b) => b.price - a.price);
+                filtered.sort((a, b) => b.price - a.price);
                 break;
             case 'title-asc':
-                filteredBooks.sort((a, b) => a.title.localeCompare(b.title));
+                filtered.sort((a, b) => a.title.localeCompare(b.title));
                 break;
             case 'title-desc':
-                filteredBooks.sort((a, b) => b.title.localeCompare(a.title));
+                filtered.sort((a, b) => b.title.localeCompare(a.title));
                 break;
             case 'rating-desc':
-                filteredBooks.sort((a, b) => b.rating - a.rating);
+                filtered.sort((a, b) => b.averageRating - a.averageRating);
                 break;
+            default:
+                // Default sort by featured/creation date
+                filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         }
 
-        // Update results count
+        filteredBooks = filtered;
+        renderBooks(filteredBooks);
+        updateResultsCount();
+    };
+
+    const updateResultsCount = () => {
+        const resultsCount = document.getElementById('results-count');
         if (resultsCount) {
             resultsCount.textContent = filteredBooks.length;
         }
-
-        renderBooks(filteredBooks);
     };
 
-    const clearAllFilters = () => {
-        // Reset radio buttons
-        document.querySelectorAll('input[name="category"]').forEach(radio => {
-            radio.checked = radio.value === 'all';
-        });
-        document.querySelectorAll('input[name="rating"]').forEach(radio => {
-            radio.checked = radio.value === 'all';
-        });
-
-        // Reset selects
-        if (authorFilter) authorFilter.value = 'all';
-        if (sortFilter) sortFilter.value = 'default';
-
-        // Reset price range
-        if (priceFilter) {
-            priceFilter.value = 500;
-            if (priceValue) priceValue.textContent = '₹500';
+    const loadBooks = async () => {
+        try {
+            console.log('Loading books...');
+            
+            // Show loading state
+            if (booksGrid) {
+                booksGrid.innerHTML = `
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <h3>Loading books...</h3>
+                        <p>Please wait while we fetch your books.</p>
+                    </div>
+                `;
+            }
+            
+            // Check server health first
+            const isHealthy = await checkServerHealth();
+            if (!isHealthy) {
+                throw new Error('Server is not accessible');
+            }
+            
+            const response = await apiCall('/books');
+            console.log('API Response:', response);
+            
+            currentBooks = response.data.books || [];
+            console.log('Current books:', currentBooks);
+            
+            filteredBooks = [...currentBooks];
+            console.log('Filtered books:', filteredBooks);
+            
+            renderBooks(filteredBooks);
+            updateResultsCount();
+        } catch (error) {
+            console.error('Failed to load books:', error);
+            if (booksGrid) {
+                booksGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Failed to load books</h3>
+                        <p>Please try again later.</p>
+                        <p class="text-muted">Error: ${error.message}</p>
+                    </div>
+                `;
+                document.getElementById('main-content').classList.remove('hidden');
+                document.body.classList.remove('body-hidden');
+            }
         }
-
-        // Reset filters object
-        currentFilters = {
-            category: 'all',
-            author: 'all',
-            maxPrice: 500,
-            minRating: 0,
-            sortBy: 'default'
-        };
-
-        applyFilters();
     };
 
     // --- Event Listeners ---
 
-    // Category filter
+    // Category filter changes
     document.querySelectorAll('input[name="category"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            currentFilters.category = e.target.value;
-            applyFilters();
-        });
+        radio.addEventListener('change', filterBooks);
     });
 
-    // Author filter
-    if (authorFilter) {
-        authorFilter.addEventListener('change', (e) => {
-            currentFilters.author = e.target.value;
-            applyFilters();
-        });
-    }
+    // Rating filter changes
+    document.querySelectorAll('input[name="rating"]').forEach(radio => {
+        radio.addEventListener('change', filterBooks);
+    });
 
-    // Price filter
+    // Price filter changes
     if (priceFilter) {
         priceFilter.addEventListener('input', (e) => {
-            currentFilters.maxPrice = parseInt(e.target.value);
-            if (priceValue) priceValue.textContent = `₹${currentFilters.maxPrice}`;
-            applyFilters();
+            if (priceValue) {
+                priceValue.textContent = `₹${e.target.value}`;
+            }
         });
+        priceFilter.addEventListener('change', filterBooks);
     }
 
-    // Rating filter
-    document.querySelectorAll('input[name="rating"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            currentFilters.minRating = parseInt(e.target.value) || 0;
-            applyFilters();
-        });
-    });
+    // Sort changes
+    if (sortSelect) {
+        sortSelect.addEventListener('change', filterBooks);
+    }
 
-    // Sort filter
-    if (sortFilter) {
-        sortFilter.addEventListener('change', (e) => {
-            currentFilters.sortBy = e.target.value;
-            applyFilters();
+    // Search functionality
+    if (searchButton) {
+        searchButton.addEventListener('click', filterBooks);
+    }
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                filterBooks();
+            }
         });
     }
 
     // Clear filters
     if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', clearAllFilters);
+        clearFiltersBtn.addEventListener('click', () => {
+            // Reset all filters
+            document.querySelectorAll('input[name="category"]').forEach(radio => {
+                radio.checked = radio.value === 'all';
+            });
+            document.querySelectorAll('input[name="rating"]').forEach(radio => {
+                radio.checked = radio.value === 'all';
+            });
+            if (priceFilter) {
+                priceFilter.value = 500;
+                if (priceValue) priceValue.textContent = '₹500';
+            }
+            if (sortSelect) sortSelect.value = 'default';
+            if (searchInput) searchInput.value = '';
+            
+            filterBooks();
+        });
     }
 
-    // --- Initializations ---
-    populateAuthors();
-    applyFilters(); // Initial render of all books
+    // Add to Cart / Wishlist
+    document.body.addEventListener('click', async (e) => {
+        const bookCard = e.target.closest('.shop-book-card');
+        if (!bookCard) return;
+
+        const bookId = bookCard.dataset.id;
+
+        if (e.target.classList.contains('add-to-cart-btn') || e.target.closest('.add-to-cart-btn')) {
+            await addToCart(bookId);
+        }
+        if (e.target.classList.contains('add-to-wishlist-btn') || e.target.closest('.add-to-wishlist-btn')) {
+            await toggleWishlist(bookId, e.target.closest('.add-to-wishlist-btn')?.querySelector('i'));
+        }
+    });
+
+    const addToCart = async (bookId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please login/signup to add items to cart', 'error');
+                return;
+            }
+
+            await apiCall('/cart/add', {
+                method: 'POST',
+                body: JSON.stringify({ bookId, quantity: 1 })
+            });
+
+            // Update cart count in header
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                const currentCount = parseInt(cartCount.textContent) || 0;
+                cartCount.textContent = currentCount + 1;
+            }
+
+            showToast('Book added to cart! 🛒', 'success');
+        } catch (error) {
+            showToast('Failed to add to cart', 'error');
+        }
+    };
+
+    const toggleWishlist = async (bookId, heartIcon) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please login/signup to add items', 'error');
+                return;
+            }
+
+            const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+            const index = wishlist.indexOf(bookId);
+            
+            if (index > -1) {
+                // Remove from wishlist
+                await apiCall(`/wishlist/${bookId}`, { method: 'DELETE' });
+                wishlist.splice(index, 1);
+                if(heartIcon) heartIcon.classList.replace('fas', 'far');
+                showToast('Removed from wishlist 💔', 'info');
+            } else {
+                // Add to wishlist
+                await apiCall('/wishlist/add', {
+                    method: 'POST',
+                    body: JSON.stringify({ bookId })
+                });
+                wishlist.push(bookId);
+                if(heartIcon) heartIcon.classList.replace('far', 'fas');
+                showToast('Added to wishlist! ❤️', 'success');
+            }
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+            
+            // Update wishlist count in header
+            const wishlistCount = document.getElementById('wishlist-count');
+            if (wishlistCount) {
+                wishlistCount.textContent = wishlist.length;
+            }
+        } catch (error) {
+            showToast('Failed to update wishlist', 'error');
+        }
+    };
+
+    // Toast notification function
+    const showToast = (message, type = 'success') => {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+    };
+
+    // Check for search query from homepage
+    const searchQuery = sessionStorage.getItem('searchQuery');
+    if (searchQuery && searchInput) {
+        searchInput.value = searchQuery;
+        sessionStorage.removeItem('searchQuery');
+        filterBooks();
+    }
+
+    // Initialize
+    loadBooks();
+
+    // Filter sidebar toggle
+    const filterBtn = document.getElementById('filter-toggle-btn');
+    const filterSidebar = document.querySelector('.filter-sidebar');
+    const filterBackdrop = document.querySelector('.filter-backdrop');
+    if (filterBtn && filterSidebar && filterBackdrop) {
+        function openSidebar() {
+            filterSidebar.classList.add('open');
+            filterBackdrop.classList.add('open');
+        }
+        function closeSidebar() {
+            filterSidebar.classList.remove('open');
+            filterBackdrop.classList.remove('open');
+        }
+        filterBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (filterSidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+        filterBackdrop.addEventListener('click', closeSidebar);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSidebar();
+        });
+        const closeBtn = document.querySelector('.close-filter-btn');
+        if (closeBtn && filterSidebar && filterBackdrop) {
+            closeBtn.addEventListener('click', function() {
+                closeSidebar();
+            });
+        }
+    }
 }); 

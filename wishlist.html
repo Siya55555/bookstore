@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <style>
         .wishlist-item {
             background: white;
@@ -120,35 +121,35 @@
         }
     </style>
 </head>
-<body>
+<body class="body-hidden">
 
     <!-- Header & Navbar -->
     <header class="header-main">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand" href="index.html"><i class="fas fa-book-open"></i> Bookworld India</a>
+                <a class="navbar-brand" href="/"><i class="fas fa-book-open"></i> Bookworld India</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
-                        <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
-                        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/shop">Shop</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/blog">Blog</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
                     </ul>
                     <div class="navbar-icons">
-                        <a href="wishlist.html" class="position-relative"><i class="fas fa-heart"></i><span class="badge bg-danger icon-badge" id="wishlist-count">0</span></a>
-                        <a href="cart.html" class="position-relative"><i class="fas fa-shopping-cart"></i><span class="badge bg-danger icon-badge" id="cart-count">0</span></a>
-                        <a href="profile.html"><i class="fas fa-user-circle"></i></a>
+                        <a href="/wishlist" class="position-relative"><i class="fas fa-heart"></i><span class="badge bg-danger icon-badge" id="wishlist-count">0</span></a>
+                        <a href="/cart" class="position-relative"><i class="fas fa-shopping-cart"></i><span class="badge bg-danger icon-badge" id="cart-count">0</span></a>
+                        <a href="/profile"><i class="fas fa-user-circle"></i></a>
                     </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main class="container py-5">
+    <main class="container py-5 hidden" id="main-content">
         <h1 class="text-center mb-4">My Wishlist</h1>
         
         <!-- Empty wishlist message -->
@@ -178,10 +179,10 @@
                 <div class="col-md-2 mb-3">
                     <h5 class="text-white">Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li><a href="about.html">About Us</a></li>
-                        <li><a href="contact.html">Contact</a></li>
-                        <li><a href="shop.html">Shop</a></li>
-                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="/about">About Us</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                        <li><a href="/shop">Shop</a></li>
+                        <li><a href="/faq">FAQ</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3 mb-3">

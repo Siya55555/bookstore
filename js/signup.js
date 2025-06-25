@@ -1,241 +1,181 @@
-// Signup Page JavaScript
-// Handles user registration and account creation
-
-import authService from './auth-service.js';
-
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- API Configuration ---
+    const API_BASE_URL = 'http://localhost:5000/api';
+
     const signupForm = document.getElementById('signup-form');
-    const nameInput = document.getElementById('name');
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirm-password');
-    const bioInput = document.getElementById('bio');
-    const errorMessage = document.getElementById('error-message');
-    const loader = document.getElementById('loader');
-    const signupButton = signupForm.querySelector('button[type="submit"]');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const phoneInput = document.getElementById('phone');
+    const signupBtn = document.getElementById('signup-btn');
 
-    // Check if user is already logged in
-    if (authService.isLoggedIn()) {
-        window.location.href = 'index.html';
-        return;
-    }
+    // --- API Helper Functions ---
+    const apiCall = async (endpoint, options = {}) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Signup failed');
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
+    };
 
-    // Handle form submission
-    signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    const showToast = (message, type = 'success') => {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+        `;
+        document.body.appendChild(toast);
         
-        const name = nameInput.value.trim();
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+    };
+
+    const setLoading = (loading) => {
+        if (signupBtn) {
+            signupBtn.disabled = loading;
+            signupBtn.innerHTML = loading ? 
+                '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...' : 
+                'Sign Up';
+        }
+    };
+
+    const validateForm = () => {
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
         const email = emailInput.value.trim();
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
-        const bio = bioInput.value.trim();
+        const phone = phoneInput.value.trim();
 
-        // Validate inputs
-        if (!name || !email || !password || !confirmPassword) {
-            showError('Please fill in all required fields');
-            return;
+        // Check required fields
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
+            showToast('Please fill in all required fields', 'error');
+            return false;
         }
 
-        if (!isValidEmail(email)) {
-            showError('Please enter a valid email address');
-            return;
+        // Check name length
+        if (firstName.length < 2 || lastName.length < 2) {
+            showToast('First and last name must be at least 2 characters', 'error');
+            return false;
         }
 
+        // Check email format
+        if (!email.includes('@') || !email.includes('.')) {
+            showToast('Please enter a valid email address', 'error');
+            return false;
+        }
+
+        // Check password length
         if (password.length < 6) {
-            showError('Password must be at least 6 characters long');
-            return;
+            showToast('Password must be at least 6 characters long', 'error');
+            return false;
         }
 
+        // Check password match
         if (password !== confirmPassword) {
-            showError('Passwords do not match');
+            showToast('Passwords do not match', 'error');
+            return false;
+        }
+
+        // Check phone format (if provided)
+        if (phone && !/^[0-9+\-\s()]+$/.test(phone)) {
+            showToast('Please enter a valid phone number', 'error');
+            return false;
+        }
+
+        return true;
+    };
+
+    const handleSignup = async (e) => {
+        e.preventDefault();
+        
+        if (!validateForm()) {
             return;
         }
 
-        if (name.length < 2) {
-            showError('Name must be at least 2 characters long');
-            return;
-        }
+        const formData = {
+            firstName: firstNameInput.value.trim(),
+            lastName: lastNameInput.value.trim(),
+            email: emailInput.value.trim(),
+            password: passwordInput.value,
+            phone: phoneInput.value.trim() || undefined
+        };
 
-        // Show loading state
-        setLoadingState(true);
+        setLoading(true);
 
         try {
-            // Attempt registration
-            const result = await authService.registerUser(email, password, name, bio);
+            const response = await apiCall('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(formData)
+            });
+
+            // Store token
+            localStorage.setItem('token', response.data.token);
             
-            if (result.success) {
-                // Show success message
-                showSuccess('Account created successfully! Redirecting...');
-                
-                // Redirect to home page after a short delay
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-            } else {
-                showError(result.error);
-            }
+            // Store user info
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+
+            showToast('Account created successfully! Redirecting...', 'success');
+
+            // Redirect to home or intended page
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || '/';
+            
+            setTimeout(() => {
+                window.location.href = redirect;
+            }, 1500);
+
         } catch (error) {
-            console.error('Registration error:', error);
-            showError('An unexpected error occurred. Please try again.');
+            showToast(error.message || 'Signup failed. Please try again.', 'error');
         } finally {
-            setLoadingState(false);
+            setLoading(false);
         }
-    });
+    };
 
-    // Google Sign-Up button (if exists)
-    const googleSignUpBtn = document.querySelector('.google-signup-btn');
-    if (googleSignUpBtn) {
-        googleSignUpBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            setLoadingState(true);
+    // --- Event Listeners ---
 
-            try {
-                const result = await authService.signInWithGoogle();
-                
-                if (result.success) {
-                    window.location.href = 'index.html';
-                } else {
-                    showError(result.error);
+    if (signupForm) {
+        signupForm.addEventListener('submit', handleSignup);
+    }
+
+    // Enter key to submit
+    [firstNameInput, lastNameInput, emailInput, passwordInput, confirmPasswordInput, phoneInput].forEach(input => {
+        if (input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSignup(e);
                 }
-            } catch (error) {
-                console.error('Google sign-up error:', error);
-                showError('Google sign-up failed. Please try again.');
-            } finally {
-                setLoadingState(false);
-            }
-        });
-    }
-
-    // Real-time password validation
-    passwordInput.addEventListener('input', validatePassword);
-    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
-
-    // Helper functions
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorMessage.className = 'alert alert-danger';
-        errorMessage.style.display = 'block';
-        
-        // Hide error after 5 seconds
-        setTimeout(() => {
-            errorMessage.style.display = 'none';
-        }, 5000);
-    }
-
-    function showSuccess(message) {
-        errorMessage.textContent = message;
-        errorMessage.className = 'alert alert-success';
-        errorMessage.style.display = 'block';
-    }
-
-    function setLoadingState(loading) {
-        if (loading) {
-            loader.style.display = 'inline-block';
-            signupButton.disabled = true;
-            signupButton.textContent = 'Creating Account...';
-        } else {
-            loader.style.display = 'none';
-            signupButton.disabled = false;
-            signupButton.textContent = 'Sign Up';
+            });
         }
-    }
-
-    function isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    function validatePassword() {
-        const password = passwordInput.value;
-        const strengthIndicator = document.getElementById('password-strength');
-        
-        if (!strengthIndicator) return;
-
-        let strength = 0;
-        let feedback = '';
-
-        if (password.length >= 6) strength++;
-        if (password.length >= 8) strength++;
-        if (/[A-Z]/.test(password)) strength++;
-        if (/[a-z]/.test(password)) strength++;
-        if (/[0-9]/.test(password)) strength++;
-        if (/[^A-Za-z0-9]/.test(password)) strength++;
-
-        switch (strength) {
-            case 0:
-            case 1:
-                feedback = 'Very Weak';
-                strengthIndicator.className = 'text-danger';
-                break;
-            case 2:
-                feedback = 'Weak';
-                strengthIndicator.className = 'text-warning';
-                break;
-            case 3:
-                feedback = 'Fair';
-                strengthIndicator.className = 'text-info';
-                break;
-            case 4:
-                feedback = 'Good';
-                strengthIndicator.className = 'text-primary';
-                break;
-            case 5:
-            case 6:
-                feedback = 'Strong';
-                strengthIndicator.className = 'text-success';
-                break;
-        }
-
-        strengthIndicator.textContent = feedback;
-    }
-
-    function validatePasswordMatch() {
-        const password = passwordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-        const matchIndicator = document.getElementById('password-match');
-        
-        if (!matchIndicator) return;
-
-        if (confirmPassword === '') {
-            matchIndicator.textContent = '';
-            matchIndicator.className = '';
-        } else if (password === confirmPassword) {
-            matchIndicator.textContent = 'Passwords match';
-            matchIndicator.className = 'text-success';
-        } else {
-            matchIndicator.textContent = 'Passwords do not match';
-            matchIndicator.className = 'text-danger';
-        }
-    }
-
-    // Add visual feedback for form fields
-    const formFields = [nameInput, emailInput, passwordInput, confirmPasswordInput, bioInput];
-    
-    formFields.forEach(field => {
-        field.addEventListener('focus', () => {
-            field.parentElement.classList.add('focused');
-        });
-
-        field.addEventListener('blur', () => {
-            if (!field.value) {
-                field.parentElement.classList.remove('focused');
-            }
-        });
     });
 
-    // Password visibility toggles
-    const passwordToggles = document.querySelectorAll('.password-toggle');
-    passwordToggles.forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const input = toggle.previousElementSibling;
-            const type = input.type === 'password' ? 'text' : 'password';
-            input.type = type;
-            toggle.innerHTML = type === 'password' ? 
-                '<i class="fas fa-eye"></i>' : 
-                '<i class="fas fa-eye-slash"></i>';
-        });
-    });
-
-    // Auto-focus first field
-    nameInput.focus();
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect') || '/';
+        window.location.href = redirect;
+    }
 }); 

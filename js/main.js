@@ -1,23 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Sample Product Data ---
-    const allBooks = [
-        { id: 1, title: 'The Alchemist', author: 'Paulo Coelho', price: 199, image: 'assets/images/books/book1.jpg', category: 'fiction', rating: 4.5, reviews: 1250 },
-        { id: 2, title: 'Sapiens', author: 'Yuval Noah Harari', price: 299, image: 'assets/images/books/book2.jpg', category: 'non-fiction', rating: 4.7, reviews: 890 },
-        { id: 3, title: 'To Kill a Mockingbird', author: 'Harper Lee', price: 249, image: 'assets/images/books/book3.jpg', category: 'fiction', rating: 4.8, reviews: 2100 },
-        { id: 4, title: '1984', author: 'George Orwell', price: 180, image: 'assets/images/books/book4.jpg', category: 'fiction', rating: 4.6, reviews: 1650 },
-        { id: 5, title: 'The Power of Habit', author: 'Charles Duhigg', price: 280, image: 'assets/images/books/book5.jpg', category: 'non-fiction', rating: 4.3, reviews: 750 },
-        { id: 6, title: 'Becoming', author: 'Michelle Obama', price: 350, image: 'assets/images/books/book6.jpg', category: 'biography', rating: 4.9, reviews: 3200 },
-        { id: 7, title: 'The Lord of the Rings', author: 'J.R.R. Tolkien', price: 450, image: 'assets/images/books/book7.jpg', category: 'fantasy', rating: 4.8, reviews: 2800 },
-        { id: 8, title: 'Atomic Habits', author: 'James Clear', price: 260, image: 'assets/images/books/book8.jpg', category: 'non-fiction', rating: 4.4, reviews: 1100 }
-    ];
-
+    // --- API Configuration ---
+    const API_BASE_URL = 'http://localhost:5000/api';
+    
     // --- Core Functions for localStorage ---
     const getFromStorage = (key) => JSON.parse(localStorage.getItem(key)) || [];
     const saveToStorage = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
     let cart = getFromStorage('cart');
     let wishlist = getFromStorage('wishlist');
+
+    // --- API Helper Functions ---
+    const apiCall = async (endpoint, options = {}) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...options.headers
+                },
+                ...options
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
+    };
 
     // --- Toast Notification System ---
     const showToast = (message, type = 'success') => {
@@ -55,37 +70,43 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- Render Featured Books ---
-    const renderFeaturedBooks = () => {
+    const renderFeaturedBooks = async () => {
         const featuredGrid = document.getElementById('featured-books-grid');
         if (!featuredGrid) return;
         
-        // Using first 4 books as featured
-        const featuredBooks = allBooks.slice(0, 4); 
+        try {
+            // Fetch featured books from API
+            const response = await apiCall('/books/featured');
+            const featuredBooks = response.data.books || [];
 
-        featuredGrid.innerHTML = featuredBooks.map(book => `
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="book-card" data-id="${book.id}">
-                    <a href="book.html?id=${book.id}">
-                        <img src="${book.image}" alt="${book.title}" class="book-card-img">
-                        <div class="book-card-body">
-                            <h5 class="book-card-title">${book.title}</h5>
-                            <p class="book-card-author">by ${book.author}</p>
-                            <div class="book-rating">
-                                <span class="rating-stars">${getStarRating(book.rating)}</span>
-                                <span class="rating-text">(${book.reviews} reviews)</span>
+            featuredGrid.innerHTML = featuredBooks.map(book => `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="book-card" data-id="${book._id}">
+                        <a href="/book.html?id=${book._id}">
+                            <img src="${book.coverImage}" alt="${book.title}" class="book-card-img">
+                            <div class="book-card-body">
+                                <h5 class="book-card-title">${book.title}</h5>
+                                <p class="book-card-author">by ${book.author}</p>
+                                <div class="book-rating">
+                                    <span class="rating-stars">${getStarRating(book.averageRating)}</span>
+                                    <span class="rating-text">(${book.totalReviews} reviews)</span>
+                                </div>
+                                <p class="book-card-price">₹${book.price}</p>
                             </div>
-                            <p class="book-card-price">₹${book.price}</p>
+                        </a>
+                        <div class="book-card-actions">
+                            <button class="btn btn-primary btn-sm add-to-cart-btn">Add to Cart</button>
+                            <button class="btn btn-outline-danger btn-sm add-to-wishlist-btn">
+                                <i class="far fa-heart"></i>
+                            </button>
                         </div>
-                    </a>
-                    <div class="book-card-actions">
-                        <button class="btn btn-primary btn-sm add-to-cart-btn">Add to Cart</button>
-                        <button class="btn btn-outline-danger btn-sm add-to-wishlist-btn">
-                            <i class="far fa-heart"></i>
-                        </button>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+        } catch (error) {
+            console.error('Failed to load featured books:', error);
+            featuredGrid.innerHTML = '<div class="col-12 text-center"><p>Failed to load featured books</p></div>';
+        }
     };
 
     const getStarRating = (rating) => {
@@ -99,45 +120,78 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
 
     // Add to Cart / Wishlist
-    document.body.addEventListener('click', (e) => {
+    document.body.addEventListener('click', async (e) => {
         const bookCard = e.target.closest('.book-card');
         if (!bookCard) return;
 
-        const bookId = parseInt(bookCard.dataset.id);
+        const bookId = bookCard.dataset.id;
 
         if (e.target.classList.contains('add-to-cart-btn')) {
-            addToCart(bookId);
+            await addToCart(bookId);
         }
         if (e.target.classList.contains('add-to-wishlist-btn') || e.target.closest('.add-to-wishlist-btn')) {
-            toggleWishlist(bookId, e.target.closest('.add-to-wishlist-btn').querySelector('i'));
+            await toggleWishlist(bookId, e.target.closest('.add-to-wishlist-btn')?.querySelector('i'));
         }
     });
 
-    const addToCart = (bookId) => {
-        const existingItem = cart.find(item => item.id === bookId);
-        if (existingItem) {
-            existingItem.quantity++;
-        } else {
-            cart.push({ id: bookId, quantity: 1 });
+    const addToCart = async (bookId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please login/signup to add items to cart', 'error');
+                return;
+            }
+
+            await apiCall('/cart/add', {
+                method: 'POST',
+                body: JSON.stringify({ bookId, quantity: 1 })
+            });
+
+            // Update local cart
+            const existingItem = cart.find(item => item.id === bookId);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ id: bookId, quantity: 1 });
+            }
+            saveToStorage('cart', cart);
+            updateCartCount();
+            showToast('Book added to cart! 🛒', 'success');
+        } catch (error) {
+            showToast('Failed to add to cart', 'error');
         }
-        saveToStorage('cart', cart);
-        updateCartCount();
-        showToast('Book added to cart! 🛒', 'success');
     };
 
-    const toggleWishlist = (bookId, heartIcon) => {
-        const index = wishlist.indexOf(bookId);
-        if (index > -1) {
-            wishlist.splice(index, 1); // Remove from wishlist
-            if(heartIcon) heartIcon.classList.replace('fas', 'far');
-            showToast('Removed from wishlist 💔', 'info');
-        } else {
-            wishlist.push(bookId); // Add to wishlist
-            if(heartIcon) heartIcon.classList.replace('far', 'fas');
-            showToast('Added to wishlist! ❤️', 'success');
+    const toggleWishlist = async (bookId, heartIcon) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please login/signup to add items', 'error');
+                return;
+            }
+
+            const index = wishlist.indexOf(bookId);
+            if (index > -1) {
+                // Remove from wishlist
+                await apiCall(`/wishlist/${bookId}`, { method: 'DELETE' });
+                wishlist.splice(index, 1);
+                if(heartIcon) heartIcon.classList.replace('fas', 'far');
+                showToast('Removed from wishlist 💔', 'info');
+            } else {
+                // Add to wishlist
+                await apiCall('/wishlist/add', {
+                    method: 'POST',
+                    body: JSON.stringify({ bookId })
+                });
+                wishlist.push(bookId);
+                if(heartIcon) heartIcon.classList.replace('far', 'fas');
+                showToast('Added to wishlist! ❤️', 'success');
+            }
+            saveToStorage('wishlist', wishlist);
+            updateWishlistCount();
+        } catch (error) {
+            showToast('Failed to update wishlist', 'error');
         }
-        saveToStorage('wishlist', wishlist);
-        updateWishlistCount();
     };
 
     // --- Search Functionality ---
@@ -148,20 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const query = searchInput.value.toLowerCase().trim();
         if (!query) return;
 
-        const results = allBooks.filter(book => 
-            book.title.toLowerCase().includes(query) ||
-            book.author.toLowerCase().includes(query) ||
-            book.category.toLowerCase().includes(query)
-        );
-
-        if (results.length > 0) {
-            // Store search results and redirect to shop page
-            sessionStorage.setItem('searchResults', JSON.stringify(results));
-            sessionStorage.setItem('searchQuery', query);
-            window.location.href = 'shop.html';
-        } else {
-            showToast('No books found for your search', 'error');
-        }
+        // Store search query and redirect to shop page
+        sessionStorage.setItem('searchQuery', query);
+        window.location.href = '/shop';
     };
 
     if (searchButton) {
@@ -190,17 +233,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.scrollTop = 0;
     });
 
-    // Newsletter Popup
+    // Newsletter Popup (show once per session)
     const newsletterPopup = document.getElementById('newsletter-popup');
     const closePopupBtn = document.querySelector('.popup-close-btn');
-    
-    if (newsletterPopup && !sessionStorage.getItem('popupShown')) {
+
+    if (newsletterPopup && !sessionStorage.getItem('newsletterShown')) {
         setTimeout(() => {
             newsletterPopup.style.display = 'flex';
-            sessionStorage.setItem('popupShown', 'true');
-        }, 5000); // Show after 5 seconds
+            sessionStorage.setItem('newsletterShown', 'true');
+        }, 1000);
     }
-    
+
     if (closePopupBtn) {
         closePopupBtn.addEventListener('click', () => {
             newsletterPopup.style.display = 'none';

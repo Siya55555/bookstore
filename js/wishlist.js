@@ -1,23 +1,137 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const allBooks = [
-        { id: 1, title: 'The Alchemist', author: 'Paulo Coelho', price: 199, image: 'assets/images/books/book1.jpg', category: 'fiction', rating: 4.5, reviews: 1250 },
-        { id: 2, title: 'Sapiens', author: 'Yuval Noah Harari', price: 299, image: 'assets/images/books/book2.jpg', category: 'non-fiction', rating: 4.7, reviews: 890 },
-        { id: 3, title: 'To Kill a Mockingbird', author: 'Harper Lee', price: 249, image: 'assets/images/books/book3.jpg', category: 'fiction', rating: 4.8, reviews: 2100 },
-        { id: 4, title: '1984', author: 'George Orwell', price: 180, image: 'assets/images/books/book4.jpg', category: 'fiction', rating: 4.6, reviews: 1650 },
-        { id: 5, title: 'The Power of Habit', author: 'Charles Duhigg', price: 280, image: 'assets/images/books/book5.jpg', category: 'non-fiction', rating: 4.3, reviews: 750 },
-        { id: 6, title: 'Becoming', author: 'Michelle Obama', price: 350, image: 'assets/images/books/book6.jpg', category: 'biography', rating: 4.9, reviews: 3200 },
-        { id: 7, title: 'The Lord of the Rings', author: 'J.R.R. Tolkien', price: 450, image: 'assets/images/books/book7.jpg', category: 'fantasy', rating: 4.8, reviews: 2800 },
-        { id: 8, title: 'Atomic Habits', author: 'James Clear', price: 260, image: 'assets/images/books/book8.jpg', category: 'non-fiction', rating: 4.4, reviews: 1100 }
-    ];
+    // --- API Configuration ---
+    const API_BASE_URL = 'http://localhost:5000/api';
 
     const wishlistContainer = document.getElementById('wishlist-container');
     const emptyWishlistMessage = document.getElementById('empty-wishlist-message');
 
-    const getFromStorage = (key) => JSON.parse(localStorage.getItem(key)) || [];
-    const saveToStorage = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+    let wishlistItems = [];
 
-    let wishlist = getFromStorage('wishlist');
+    // --- API Helper Functions ---
+    const apiCall = async (endpoint, options = {}) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...options.headers
+                },
+                ...options
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
+    };
+
+    const loadWishlist = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showEmptyWishlist();
+                return;
+            }
+
+            const response = await apiCall('/wishlist');
+            wishlistItems = response.data || [];
+            renderWishlist();
+        } catch (error) {
+            console.error('Failed to load wishlist:', error);
+            showEmptyWishlist();
+        }
+    };
+
+    const renderWishlist = () => {
+        if (wishlistItems.length === 0) {
+            showEmptyWishlist();
+            return;
+        }
+
+        // Hide empty wishlist message
+        if (emptyWishlistMessage) {
+            emptyWishlistMessage.style.display = 'none';
+        }
+
+        // Render wishlist items
+        if (wishlistContainer) {
+            wishlistContainer.innerHTML = wishlistItems.map(item => `
+                <div class="wishlist-item" data-id="${item.book._id}">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 col-4">
+                            <img src="${item.book.coverImage}" alt="${item.book.title}" class="wishlist-item-img">
+                        </div>
+                        <div class="col-md-4 col-8">
+                            <h5 class="wishlist-item-title">${item.book.title}</h5>
+                            <p class="wishlist-item-author">by ${item.book.author}</p>
+                            <div class="book-rating">
+                                <span class="rating-stars">${getStarRating(item.book.averageRating)}</span>
+                                <span class="rating-text">(${item.book.totalReviews} reviews)</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <p class="wishlist-item-price">₹${item.book.price}</p>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <button class="btn btn-primary btn-sm add-to-cart-btn">
+                                <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                            </button>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <button class="btn btn-outline-danger btn-sm remove-from-wishlist-btn">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        document.getElementById('main-content').classList.remove('hidden');
+        document.body.classList.remove('body-hidden');
+    };
+
+    const showEmptyWishlist = () => {
+        if (wishlistContainer) {
+            wishlistContainer.innerHTML = '';
+        }
+        if (emptyWishlistMessage) {
+            emptyWishlistMessage.style.display = 'block';
+        }
+        document.getElementById('main-content').classList.remove('hidden');
+        document.body.classList.remove('body-hidden');
+    };
+
+    const addToCart = async (bookId) => {
+        try {
+            await apiCall('/cart/add', {
+                method: 'POST',
+                body: JSON.stringify({ bookId, quantity: 1 })
+            });
+
+            showToast('Book added to cart! 🛒', 'success');
+        } catch (error) {
+            showToast('Failed to add to cart', 'error');
+        }
+    };
+
+    const removeFromWishlist = async (bookId) => {
+        try {
+            await apiCall(`/wishlist/${bookId}`, { method: 'DELETE' });
+            
+            wishlistItems = wishlistItems.filter(item => item.book._id !== bookId);
+            renderWishlist();
+            showToast('Removed from wishlist', 'success');
+        } catch (error) {
+            showToast('Failed to remove from wishlist', 'error');
+        }
+    };
 
     const getStarRating = (rating) => {
         const fullStars = Math.floor(rating);
@@ -27,90 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return '★'.repeat(fullStars) + (hasHalfStar ? '☆' : '') + '☆'.repeat(emptyStars);
     };
 
-    const updateWishlistDisplay = () => {
-        if (wishlist.length === 0) {
-            if (wishlistContainer) wishlistContainer.style.display = 'none';
-            if (emptyWishlistMessage) emptyWishlistMessage.style.display = 'block';
-            return;
-        }
-
-        if (wishlistContainer) wishlistContainer.style.display = 'block';
-        if (emptyWishlistMessage) emptyWishlistMessage.style.display = 'none';
-
-        renderWishlistItems();
-    };
-
-    const renderWishlistItems = () => {
-        if (!wishlistContainer) return;
-
-        const wishlistHTML = wishlist.map(bookId => {
-            const book = allBooks.find(b => b.id === bookId);
-            if (!book) return '';
-
-            return `
-                <div class="wishlist-item" data-id="${book.id}">
-                    <div class="row align-items-center">
-                        <div class="col-md-2">
-                            <img src="${book.image}" alt="${book.title}" class="wishlist-item-img">
-                        </div>
-                        <div class="col-md-4">
-                            <h5 class="wishlist-item-title">${book.title}</h5>
-                            <p class="wishlist-item-author">by ${book.author}</p>
-                            <div class="book-rating">
-                                <span class="rating-stars">${getStarRating(book.rating)}</span>
-                                <span class="rating-text">(${book.reviews} reviews)</span>
-                            </div>
-                            <small class="text-muted">
-                                <i class="fas fa-tag me-1"></i>${book.category.charAt(0).toUpperCase() + book.category.slice(1)}
-                            </small>
-                        </div>
-                        <div class="col-md-2">
-                            <p class="wishlist-item-price">₹${book.price}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="wishlist-actions">
-                                <button class="btn btn-primary btn-sm move-to-cart-btn">
-                                    <i class="fas fa-shopping-cart me-1"></i>Move to Cart
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm remove-from-wishlist-btn">
-                                    <i class="fas fa-trash me-1"></i>Remove
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        wishlistContainer.innerHTML = wishlistHTML;
-    };
-
-    const moveToCart = (bookId) => {
-        // Remove from wishlist
-        wishlist = wishlist.filter(id => id !== bookId);
-        saveToStorage('wishlist', wishlist);
-
-        // Add to cart
-        let cart = getFromStorage('cart');
-        const existingItem = cart.find(item => item.id === bookId);
-        if (existingItem) {
-            existingItem.quantity++;
-        } else {
-            cart.push({ id: bookId, quantity: 1 });
-        }
-        saveToStorage('cart', cart);
-
-        updateWishlistDisplay();
-        showToast('Book moved to cart! 🛒', 'success');
-    };
-
-    const removeFromWishlist = (bookId) => {
-        wishlist = wishlist.filter(id => id !== bookId);
-        saveToStorage('wishlist', wishlist);
-        updateWishlistDisplay();
-        showToast('Removed from wishlist 💔', 'info');
-    };
-
+    // Toast notification function
     const showToast = (message, type = 'success') => {
         const toast = document.createElement('div');
         toast.className = `toast-notification ${type}`;
@@ -121,36 +152,29 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(toast);
         
         setTimeout(() => toast.classList.add('show'), 100);
-        
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => document.body.removeChild(toast), 300);
         }, 3000);
     };
 
-    // Event Listeners
-    document.body.addEventListener('click', (e) => {
+    // --- Event Listeners ---
+
+    document.body.addEventListener('click', async (e) => {
         const wishlistItem = e.target.closest('.wishlist-item');
         if (!wishlistItem) return;
 
-        const bookId = parseInt(wishlistItem.dataset.id);
+        const bookId = wishlistItem.dataset.id;
 
-        if (e.target.classList.contains('move-to-cart-btn') || e.target.closest('.move-to-cart-btn')) {
-            moveToCart(bookId);
+        if (e.target.classList.contains('add-to-cart-btn') || e.target.closest('.add-to-cart-btn')) {
+            await addToCart(bookId);
         }
 
         if (e.target.classList.contains('remove-from-wishlist-btn') || e.target.closest('.remove-from-wishlist-btn')) {
-            removeFromWishlist(bookId);
-        }
-    });
-
-    // Continue shopping button
-    document.body.addEventListener('click', (e) => {
-        if (e.target.id === 'continue-shopping-btn') {
-            window.location.href = 'shop.html';
+            await removeFromWishlist(bookId);
         }
     });
 
     // Initialize
-    updateWishlistDisplay();
+    loadWishlist();
 }); 

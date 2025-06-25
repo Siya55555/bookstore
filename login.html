@@ -8,13 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <style>
         .auth-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: url('assets/images/banners/hero-banner.jpg') no-repeat center center/cover;
+            background: url('/images/hero-banner.jpg') no-repeat center center/cover;
         }
         .auth-card {
             width: 100%;
@@ -33,7 +34,7 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="text-center mb-4">
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="/">
                     <i class="fas fa-book-open"></i> Bookworld India
                 </a>
                 <h3 class="mt-3">Welcome Back!</h3>
@@ -54,7 +55,7 @@
                         <input type="checkbox" class="form-check-input" id="rememberMe">
                         <label class="form-check-label" for="rememberMe">Remember Me</label>
                     </div>
-                    <a href="#" class="form-text">Forgot Password?</a>
+                    <a href="#" id="forgot-password-link">Forgot Password?</a>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">
                     <span id="loader" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
@@ -62,7 +63,28 @@
                 </button>
             </form>
             <div class="text-center mt-4">
-                <p class="text-muted">Don't have an account? <a href="signup.html">Sign Up</a></p>
+                <p class="text-muted">Don't have an account? <a href="/signup">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="forgot-password-form">
+                        <div class="mb-3">
+                            <label for="forgot-email" class="form-label">Enter your email address</label>
+                            <input type="email" class="form-control" id="forgot-email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send Reset Link</button>
+                    </form>
+                    <div id="forgot-password-message" class="mt-3"></div>
+                </div>
             </div>
         </div>
     </div>

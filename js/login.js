@@ -1,167 +1,165 @@
-// Login Page JavaScript
-// Handles user authentication and login functionality
-
-import authService from './auth-service.js';
-
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- API Configuration ---
+    const API_BASE_URL = 'http://localhost:5000/api';
+
     const loginForm = document.getElementById('login-form');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
-    const rememberMeCheckbox = document.getElementById('rememberMe');
-    const errorMessage = document.getElementById('error-message');
-    const loader = document.getElementById('loader');
-    const loginButton = loginForm.querySelector('button[type="submit"]');
+    const loginBtn = document.getElementById('login-btn');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const forgotPasswordModal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    const forgotPasswordMessage = document.getElementById('forgot-password-message');
 
-    // Check if user is already logged in
-    if (authService.isLoggedIn()) {
-        window.location.href = 'index.html';
-        return;
-    }
+    // --- API Helper Functions ---
+    const apiCall = async (endpoint, options = {}) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
+    };
 
-    // Handle form submission
-    loginForm.addEventListener('submit', async (e) => {
+    const showToast = (message, type = 'success') => {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+    };
+
+    const setLoading = (loading) => {
+        if (loginBtn) {
+            loginBtn.disabled = loading;
+            loginBtn.innerHTML = loading ? 
+                '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...' : 
+                'Login';
+        }
+    };
+
+    const handleLogin = async (e) => {
         e.preventDefault();
         
         const email = emailInput.value.trim();
         const password = passwordInput.value;
-        const rememberMe = rememberMeCheckbox.checked;
 
-        // Validate inputs
+        // Basic validation
         if (!email || !password) {
-            showError('Please fill in all fields');
+            showToast('Please fill in all fields', 'error');
             return;
         }
 
-        if (!isValidEmail(email)) {
-            showError('Please enter a valid email address');
+        if (!email.includes('@')) {
+            showToast('Please enter a valid email', 'error');
             return;
         }
 
-        // Show loading state
-        setLoadingState(true);
+        setLoading(true);
 
         try {
-            // Attempt login
-            const result = await authService.loginUser(email, password);
-            
-            if (result.success) {
-                // Store remember me preference
-                if (rememberMe) {
-                    localStorage.setItem('rememberMe', 'true');
-                    localStorage.setItem('userEmail', email);
-                } else {
-                    localStorage.removeItem('rememberMe');
-                    localStorage.removeItem('userEmail');
-                }
+            const response = await apiCall('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
 
-                // Redirect to home page
-                window.location.href = 'index.html';
-            } else {
-                showError(result.error);
-            }
+            // Store token
+            localStorage.setItem('token', response.data.token);
+            
+            // Store user info
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+
+            showToast('Login successful! Redirecting...', 'success');
+
+            // Redirect to intended page or home
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || '/';
+            
+            setTimeout(() => {
+                window.location.href = redirect;
+            }, 1500);
+
         } catch (error) {
-            console.error('Login error:', error);
-            showError('An unexpected error occurred. Please try again.');
+            showToast(error.message || 'Login failed. Please try again.', 'error');
         } finally {
-            setLoadingState(false);
+            setLoading(false);
+        }
+    };
+
+    // --- Event Listeners ---
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    // Enter key to submit
+    [emailInput, passwordInput].forEach(input => {
+        if (input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleLogin(e);
+                }
+            });
         }
     });
 
-    // Google Sign-In button (if exists)
-    const googleSignInBtn = document.querySelector('.google-signin-btn');
-    if (googleSignInBtn) {
-        googleSignInBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            setLoadingState(true);
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect') || '/';
+        window.location.href = redirect;
+    }
 
-            try {
-                const result = await authService.signInWithGoogle();
-                
-                if (result.success) {
-                    window.location.href = 'index.html';
-                } else {
-                    showError(result.error);
-                }
-            } catch (error) {
-                console.error('Google sign-in error:', error);
-                showError('Google sign-in failed. Please try again.');
-            } finally {
-                setLoadingState(false);
-            }
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordMessage.textContent = '';
+            forgotPasswordForm.reset();
+            forgotPasswordModal.show();
         });
     }
 
-    // Load remembered email if exists
-    loadRememberedEmail();
-
-    // Helper functions
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorMessage.style.display = 'block';
-        
-        // Hide error after 5 seconds
-        setTimeout(() => {
-            errorMessage.style.display = 'none';
-        }, 5000);
-    }
-
-    function setLoadingState(loading) {
-        if (loading) {
-            loader.style.display = 'inline-block';
-            loginButton.disabled = true;
-            loginButton.textContent = 'Logging in...';
-        } else {
-            loader.style.display = 'none';
-            loginButton.disabled = false;
-            loginButton.textContent = 'Login';
-        }
-    }
-
-    function isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    function loadRememberedEmail() {
-        const rememberMe = localStorage.getItem('rememberMe');
-        const savedEmail = localStorage.getItem('userEmail');
-        
-        if (rememberMe === 'true' && savedEmail) {
-            emailInput.value = savedEmail;
-            rememberMeCheckbox.checked = true;
-        }
-    }
-
-    // Add some visual feedback
-    emailInput.addEventListener('focus', () => {
-        emailInput.parentElement.classList.add('focused');
-    });
-
-    emailInput.addEventListener('blur', () => {
-        if (!emailInput.value) {
-            emailInput.parentElement.classList.remove('focused');
-        }
-    });
-
-    passwordInput.addEventListener('focus', () => {
-        passwordInput.parentElement.classList.add('focused');
-    });
-
-    passwordInput.addEventListener('blur', () => {
-        if (!passwordInput.value) {
-            passwordInput.parentElement.classList.remove('focused');
-        }
-    });
-
-    // Password visibility toggle (if exists)
-    const passwordToggle = document.querySelector('.password-toggle');
-    if (passwordToggle) {
-        passwordToggle.addEventListener('click', () => {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            passwordToggle.innerHTML = type === 'password' ? 
-                '<i class="fas fa-eye"></i>' : 
-                '<i class="fas fa-eye-slash"></i>';
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value.trim();
+            if (!email) return;
+            forgotPasswordMessage.textContent = 'Sending reset link...';
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                if (!response.ok) throw new Error('Failed to send reset link');
+                forgotPasswordMessage.textContent = 'If an account exists for this email, a password reset link has been sent.';
+            } catch (err) {
+                forgotPasswordMessage.textContent = 'Failed to send reset link. Please try again.';
+            }
         });
     }
 }); 

@@ -8,6 +8,54 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    
+    <style>
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-width: 900px;
+            width: 100%;
+        }
+        @media (max-width: 1199.98px) {
+            .blog-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 991.98px) {
+            .blog-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 575.98px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card.h-100 {
+            max-height: 440px;
+            height: 440px;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s, transform 0.3s;
+            overflow: hidden;
+        }
+        .card.h-100:hover {
+            transform: scale(1.04);
+            box-shadow: 0 8px 32px rgba(233, 78, 119, 0.15), 0 1.5px 6px rgba(0,0,0,0.08);
+            z-index: 2;
+        }
+        .card-img-top {
+            height: 220px;
+            object-fit: cover;
+        }
+        .card-body {
+            flex: 1 1 auto;
+            overflow: hidden;
+        }
+    </style>
+
 </head>
 <body>
 
@@ -15,32 +63,32 @@
     <header class="header-main">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand" href="index.html"><i class="fas fa-book-open"></i> Bookworld India</a>
+                <a class="navbar-brand" href="/"><i class="fas fa-book-open"></i> Bookworld India</a>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
-                        <li class="nav-item"><a class="nav-link active" href="blog.html">Blog</a></li>
-                        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/shop">Shop</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="/blog">Blog</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
                     </ul>
                     <div class="navbar-icons">
-                        <a href="wishlist.html" class="position-relative"><i class="fas fa-heart"></i><span class="badge bg-danger icon-badge" id="wishlist-count">0</span></a>
-                        <a href="cart.html" class="position-relative"><i class="fas fa-shopping-cart"></i><span class="badge bg-danger icon-badge" id="cart-count">0</span></a>
-                        <a href="profile.html"><i class="fas fa-user-circle"></i></a>
+                        <a href="/wishlist" class="position-relative"><i class="fas fa-heart"></i><span class="badge bg-danger icon-badge" id="wishlist-count">0</span></a>
+                        <a href="/cart" class="position-relative"><i class="fas fa-shopping-cart"></i><span class="badge bg-danger icon-badge" id="cart-count">0</span></a>
+                        <a href="/profile"><i class="fas fa-user-circle"></i></a>
                     </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main class="container py-5">
+    <main class="container-fluid py-5">
         <h1 class="text-center mb-5">Our Blog</h1>
-        <div class="row">
+        <div class="blog-grid">
             <!-- Blog Post 1 -->
-            <div class="col-md-6 col-lg-4 mb-4">
+            <div>
                 <div class="card h-100 shadow-custom">
-                    <img src="assets/images/books/book1.jpg" class="card-img-top" alt="Fiction Books Collection" style="height: 250px; object-fit: cover;">
+                    <img src="/images/book1.jpg" class="card-img-top" alt="Fiction Books Collection">
                     <div class="card-body">
                         <h5 class="card-title">The Top 10 Must-Read Fiction Books of the Year</h5>
                         <p class="card-text">We dive into the most compelling fiction novels that have captured our hearts and minds this year. From sprawling fantasies to intimate dramas, there's something for every reader.</p>
@@ -52,9 +100,9 @@
                 </div>
             </div>
             <!-- Blog Post 2 -->
-            <div class="col-md-6 col-lg-4 mb-4">
+            <div>
                 <div class="card h-100 shadow-custom">
-                    <img src="assets/images/books/book2.jpg" class="card-img-top" alt="Mental Health and Reading" style="height: 250px; object-fit: cover;">
+                    <img src="/images/book2.jpg" class="card-img-top" alt="Mental Health and Reading">
                     <div class="card-body">
                         <h5 class="card-title">How Reading Improves Your Mental Health</h5>
                         <p class="card-text">Explore the science-backed benefits of reading for your brain and overall well-being. It's more than just a hobby; it's a form of self-care.</p>
@@ -66,9 +114,9 @@
                 </div>
             </div>
             <!-- Blog Post 3 -->
-            <div class="col-md-6 col-lg-4 mb-4">
+            <div>
                 <div class="card h-100 shadow-custom">
-                    <img src="assets/images/books/book3.jpg" class="card-img-top" alt="Home Library Setup" style="height: 250px; object-fit: cover;">
+                    <img src="/images/book3.jpg" class="card-img-top" alt="Home Library Setup">
                     <div class="card-body">
                         <h5 class="card-title">A Guide to Building Your Perfect Home Library</h5>
                         <p class="card-text">Dreaming of a personal library? Here are our top tips for curating a collection that reflects your taste, organizing your shelves, and creating a cozy reading nook.</p>
@@ -80,9 +128,9 @@
                 </div>
             </div>
             <!-- Blog Post 4 -->
-            <div class="col-md-6 col-lg-4 mb-4">
+            <div>
                 <div class="card h-100 shadow-custom">
-                    <img src="assets/images/books/book4.jpg" class="card-img-top" alt="Classic Literature" style="height: 250px; object-fit: cover;">
+                    <img src="/images/book4.jpg" class="card-img-top" alt="Classic Literature">
                     <div class="card-body">
                         <h5 class="card-title">Classic Literature: Why These Books Still Matter</h5>
                         <p class="card-text">Discover why classic literature continues to resonate with readers across generations and how these timeless stories shape our understanding of the world.</p>
@@ -94,9 +142,9 @@
                 </div>
             </div>
             <!-- Blog Post 5 -->
-            <div class="col-md-6 col-lg-4 mb-4">
+            <div>
                 <div class="card h-100 shadow-custom">
-                    <img src="assets/images/books/book5.jpg" class="card-img-top" alt="Self-Help Books" style="height: 250px; object-fit: cover;">
+                    <img src="/images/book5.jpg" class="card-img-top" alt="Self-Help Books">
                     <div class="card-body">
                         <h5 class="card-title">The Power of Self-Help Books: Transform Your Life</h5>
                         <p class="card-text">Explore how self-help books can provide practical tools for personal growth, motivation, and positive change in your daily life.</p>
@@ -108,9 +156,9 @@
                 </div>
             </div>
             <!-- Blog Post 6 -->
-            <div class="col-md-6 col-lg-4 mb-4">
+            <div>
                 <div class="card h-100 shadow-custom">
-                    <img src="assets/images/books/book6.jpg" class="card-img-top" alt="Biography Books" style="height: 250px; object-fit: cover;">
+                    <img src="/images/book6.jpg" class="card-img-top" alt="Biography Books">
                     <div class="card-body">
                         <h5 class="card-title">Inspiring Biographies That Will Change Your Perspective</h5>
                         <p class="card-text">From world leaders to artists, these compelling biographies offer insights into extraordinary lives and the lessons we can learn from them.</p>
@@ -135,10 +183,10 @@
                 <div class="col-md-2 mb-3">
                     <h5 class="text-white">Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li><a href="about.html">About Us</a></li>
-                        <li><a href="contact.html">Contact</a></li>
-                        <li><a href="shop.html">Shop</a></li>
-                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="/about">About Us</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                        <li><a href="/shop">Shop</a></li>
+                        <li><a href="/faq">FAQ</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3 mb-3">
