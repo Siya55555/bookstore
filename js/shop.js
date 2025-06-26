@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // This script will be specific to the shop page functionality.
 
     // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = '/api';
 
     const booksGrid = document.getElementById('shop-grid');
     const categoryFilter = document.getElementById('category-filter');

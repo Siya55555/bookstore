@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = '/api';
 
     const wishlistContainer = document.getElementById('wishlist-container');
     const emptyWishlistMessage = document.getElementById('empty-wishlist-message');

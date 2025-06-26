@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = '/api';
     
     // --- Core Functions for localStorage ---
     const getFromStorage = (key) => JSON.parse(localStorage.getItem(key)) || [];

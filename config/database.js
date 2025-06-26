@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Make sure your MONGO_URI uses the 'bookstore' database, not 'test'.
 const dbURI = process.env.MONGO_URI;
 
 const connectDB = async () => {

@@ -204,10 +204,6 @@ const bookSchema = new mongoose.Schema({
     enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
     default: 'Intermediate'
   }
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
 });
 
 // Virtual for discounted price

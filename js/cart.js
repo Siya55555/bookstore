@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = '/api';
 
     const cartItemsContainer = document.getElementById('cart-items');
     const cartSummary = document.getElementById('cart-summary');

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = '/api';
 
     const signupForm = document.getElementById('signup-form');
     const firstNameInput = document.getElementById('firstName');

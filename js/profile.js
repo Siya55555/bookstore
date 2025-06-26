@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         try {
-            const response = await fetch('http://localhost:5000/api/auth/me', {
+            const response = await fetch('/api/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = '/api';
 
     const profileForm = document.getElementById('profile-form');
     const passwordForm = document.getElementById('password-form');

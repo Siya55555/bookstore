@@ -74,11 +74,16 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com', 'https://www.yourdomain.com', 'http://localhost:5000']
-    : ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5500', 'http://localhost:5000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  ? [
+      'https://bookstore-5iz9.onrender.com', // your Render domain
+      'https://yourdomain.com', 
+      'https://www.yourdomain.com'
+    ]
+  : [
+      'http://localhost:3000', 
+      'http://localhost:5000', 
+      'http://127.0.0.1:5500'
+    ],
 }));
 
 // Compression middleware

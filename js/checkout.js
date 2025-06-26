@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchCart() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/cart', {
+            const response = await fetch('/api/cart', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Failed to fetch cart');
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('token');
         const bookDetails = await Promise.all(
             cartItems.map(item =>
-                fetch(`http://localhost:5000/api/books/${item.book._id}`, {
+                fetch(`/api/books/${item.book._id}`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 })
                 .then(res => res.json())
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         placeOrderBtn.disabled = true;
         placeOrderBtn.textContent = 'Placing Order...';
         try {
-            const response = await fetch('http://localhost:5000/api/orders/create', {
+            const response = await fetch('/api/orders/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

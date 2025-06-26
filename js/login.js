@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = '/api';
 
     const loginForm = document.getElementById('login-form');
     const emailInput = document.getElementById('email');
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!email) return;
             forgotPasswordMessage.textContent = 'Sending reset link...';
             try {
-                const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+                const response = await fetch('/api/auth/forgot-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
