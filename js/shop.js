@@ -44,9 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkServerHealth = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/health`);
+            if (!response.ok) return false;
             const data = await response.json();
             console.log('Server health check:', data);
-            return true;
+            return data.success === true;
         } catch (error) {
             console.error('Server health check failed:', error);
             return false;
@@ -229,6 +230,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadBooks = async () => {
+        const loadBooks = async () => {
+            try {
+                console.log('Checking server health...');
+                const isHealthy = await checkServerHealth();
+                console.log('Server health:', isHealthy);
+                if (!isHealthy) {
+                    throw new Error('Server is not accessible');
+                }
+                // ...rest of your code...
+            } catch (error) {
+                console.error('Failed to load books:', error);
+                // ...rest of your error handling...
+            }
+        };
         try {
             console.log('Loading books...');
             
