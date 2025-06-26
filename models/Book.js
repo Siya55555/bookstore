@@ -131,6 +131,73 @@ const bookSchema = new mongoose.Schema({
     default: 0
   },
   
+  // Advanced Inventory Management
+  lowStockThreshold: {
+    type: Number,
+    min: [0, 'Low stock threshold cannot be negative'],
+    default: 5
+  },
+  reorderPoint: {
+    type: Number,
+    min: [0, 'Reorder point cannot be negative'],
+    default: 10
+  },
+  reorderQuantity: {
+    type: Number,
+    min: [1, 'Reorder quantity must be at least 1'],
+    default: 50
+  },
+  supplier: {
+    name: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Supplier name cannot exceed 100 characters']
+    },
+    email: {
+      type: String,
+      trim: true,
+      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    },
+    phone: {
+      type: String,
+      trim: true
+    },
+    cost: {
+      type: Number,
+      min: [0, 'Supplier cost cannot be negative']
+    }
+  },
+  lastRestocked: {
+    type: Date
+  },
+  nextRestockDate: {
+    type: Date
+  },
+  reservedQuantity: {
+    type: Number,
+    min: [0, 'Reserved quantity cannot be negative'],
+    default: 0
+  },
+  
+  // Shipping Information
+  shippingWeight: {
+    type: Number,
+    min: [0, 'Shipping weight cannot be negative']
+  },
+  shippingClass: {
+    type: String,
+    enum: ['Standard', 'Express', 'Premium'],
+    default: 'Standard'
+  },
+  isEligibleForFreeShipping: {
+    type: Boolean,
+    default: false
+  },
+  freeShippingThreshold: {
+    type: Number,
+    min: [0, 'Free shipping threshold cannot be negative']
+  },
+  
   // Images
   coverImage: {
     type: String,
@@ -157,6 +224,41 @@ const bookSchema = new mongoose.Schema({
     min: [0, 'Total reviews cannot be negative'],
     default: 0
   },
+  reviews: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: [1, 'Rating must be at least 1'],
+      max: [5, 'Rating cannot exceed 5']
+    },
+    title: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Review title cannot exceed 100 characters']
+    },
+    comment: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Review comment cannot exceed 1000 characters']
+    },
+    isVerifiedPurchase: {
+      type: Boolean,
+      default: false
+    },
+    helpful: {
+      type: Number,
+      default: 0
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   
   // Status and visibility
   isActive: {
@@ -225,8 +327,34 @@ bookSchema.virtual('discountPercentage').get(function() {
 // Virtual for stock status
 bookSchema.virtual('stockStatus').get(function() {
   if (this.stockQuantity === 0) return 'Out of Stock';
-  if (this.stockQuantity <= 5) return 'Low Stock';
+  if (this.stockQuantity <= this.lowStockThreshold) return 'Low Stock';
   return 'In Stock';
+});
+
+// Virtual for available stock (excluding reserved)
+bookSchema.virtual('availableStock').get(function() {
+  return Math.max(0, this.stockQuantity - this.reservedQuantity);
+});
+
+// Virtual for stock status with thresholds
+bookSchema.virtual('detailedStockStatus').get(function() {
+  if (this.stockQuantity === 0) return 'Out of Stock';
+  if (this.stockQuantity <= this.lowStockThreshold) return 'Low Stock';
+  if (this.stockQuantity <= this.reorderPoint) return 'Reorder Soon';
+  return 'In Stock';
+});
+
+// Virtual for profit margin
+bookSchema.virtual('profitMargin').get(function() {
+  if (this.supplier && this.supplier.cost && this.price > 0) {
+    return ((this.price - this.supplier.cost) / this.price * 100).toFixed(2);
+  }
+  return null;
+});
+
+// Virtual for total value in stock
+bookSchema.virtual('stockValue').get(function() {
+  return this.stockQuantity * this.price;
 });
 
 // Virtual for availability
