@@ -24,10 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         message.textContent = 'Resetting password...';
         try {
-            const response = await fetch('/api/auth/reset-password', {
-                method: 'POST',
+            const response = await fetch(`/api/auth/reset-password/${token}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, password: newPassword })
+                body: JSON.stringify({ password: newPassword })
             });
             if (!response.ok) throw new Error('Failed to reset password');
             message.textContent = 'Password reset successful! You can now log in with your new password.';

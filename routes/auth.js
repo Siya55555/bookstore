@@ -8,6 +8,7 @@ const User = require('../models/User');
 const { generateToken, protect } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/error');
 const ErrorResponse = require('../utils/errorResponse');
+const { sendPasswordResetEmail, sendWelcomeEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -70,6 +71,14 @@ router.post('/register', [
 
   // Remove password from response
   user.password = undefined;
+
+  // Send welcome email (don't block registration if email fails)
+  try {
+    await sendWelcomeEmail(user.email, user.firstName);
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    // Don't fail registration if email fails
+  }
 
   res.status(201).json({
     success: true,
@@ -314,9 +323,10 @@ router.post('/forgot-password', [
 
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: 'User not found'
+    // Don't reveal if user exists or not for security
+    return res.status(200).json({
+      success: true,
+      message: 'If an account exists for this email, a password reset link has been sent.'
     });
   }
 
@@ -330,15 +340,27 @@ router.post('/forgot-password', [
 
   await user.save();
 
-  // TODO: Send email with reset token
-  // For now, just return the token (in production, send via email)
-  res.status(200).json({
-    success: true,
-    message: 'Password reset email sent',
-    data: {
-      resetToken // Remove this in production
-    }
-  });
+  // Send email with reset token
+  try {
+    await sendPasswordResetEmail(user.email, resetToken, user.firstName);
+    
+    res.status(200).json({
+      success: true,
+      message: 'If an account exists for this email, a password reset link has been sent.'
+    });
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    
+    // Clear the reset token if email failed
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+    
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send password reset email. Please try again later.'
+    });
+  }
 }));
 
 // @desc    Reset password
