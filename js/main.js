@@ -57,13 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UI Update Functions ---
     const updateCartCount = () => {
         const cartCount = document.getElementById('cart-count');
+        // Always get the latest cart from localStorage
+        const cart = getFromStorage('cart');
         if (cartCount) {
-            cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
         }
     };
 
     const updateWishlistCount = () => {
         const wishlistCount = document.getElementById('wishlist-count');
+        // Always get the latest wishlist from localStorage
+        const wishlist = getFromStorage('wishlist');
         if (wishlistCount) {
             wishlistCount.textContent = wishlist.length;
         }
@@ -78,8 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch featured books from API
             const response = await apiCall('/books/featured');
             const featuredBooks = response.data.books || [];
+            const wishlist = getFromStorage('wishlist');
 
-            featuredGrid.innerHTML = featuredBooks.map(book => `
+            featuredGrid.innerHTML = featuredBooks.map(book => {
+                const isInWishlist = wishlist.includes(book._id);
+                const heartIcon = isInWishlist ? 'fas' : 'far';
+                const heartStyle = isInWishlist ? 'style="color: #e94e77;"' : '';
+                return `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="book-card" data-id="${book._id}">
                         <a href="/book.html?id=${book._id}">
@@ -89,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <p class="book-card-author">by ${book.author}</p>
                                 <div class="book-rating">
                                     <span class="rating-stars">${getStarRating(book.averageRating)}</span>
-                                    <span class="rating-text">(${book.totalReviews} reviews)</span>
                                 </div>
                                 <p class="book-card-price">₹${book.price}</p>
                             </div>
@@ -97,12 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="book-card-actions">
                             <button class="btn btn-primary btn-sm add-to-cart-btn">Add to Cart</button>
                             <button class="btn btn-outline-danger btn-sm add-to-wishlist-btn">
-                                <i class="far fa-heart"></i>
+                                <i class="${heartIcon} fa-heart" ${heartStyle}></i>
                             </button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         } catch (error) {
             console.error('Failed to load featured books:', error);
             featuredGrid.innerHTML = '<div class="col-12 text-center"><p>Failed to load featured books</p></div>';
@@ -170,21 +179,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Always get the latest wishlist from localStorage
+            let wishlist = getFromStorage('wishlist');
             const index = wishlist.indexOf(bookId);
             if (index > -1) {
                 // Remove from wishlist
                 await apiCall(`/wishlist/${bookId}`, { method: 'DELETE' });
                 wishlist.splice(index, 1);
-                if(heartIcon) heartIcon.classList.replace('fas', 'far');
+                if (heartIcon) {
+                    heartIcon.classList.replace('fas', 'far');
+                    heartIcon.style.color = '';
+                }
                 showToast('Removed from wishlist 💔', 'info');
             } else {
-                // Add to wishlist
+                // Add to wishlist only if not already present
                 await apiCall('/wishlist/add', {
                     method: 'POST',
                     body: JSON.stringify({ bookId })
                 });
-                wishlist.push(bookId);
-                if(heartIcon) heartIcon.classList.replace('far', 'fas');
+                if (!wishlist.includes(bookId)) {
+                    wishlist.push(bookId);
+                }
+                if (heartIcon) {
+                    heartIcon.classList.replace('far', 'fas');
+                    heartIcon.style.color = '#e94e77'; // Pink color
+                }
                 showToast('Added to wishlist! ❤️', 'success');
             }
             saveToStorage('wishlist', wishlist);
@@ -298,6 +317,17 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFeaturedBooks();
     updateCartCount();
     updateWishlistCount();
+
+    // Wishlist icon click handler for homepage featured books
+    document.addEventListener('click', async (e) => {
+        if (e.target.closest('.add-to-wishlist-btn')) {
+            const bookCard = e.target.closest('.book-card');
+            if (!bookCard) return;
+            const bookId = bookCard.dataset.id;
+            const heartIcon = bookCard.querySelector('.add-to-wishlist-btn i');
+            await toggleWishlist(bookId, heartIcon);
+        }
+    });
 
     // Check for search results on shop page
     if (window.location.pathname.includes('shop.html')) {

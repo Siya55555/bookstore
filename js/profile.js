@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         try {
-            const response = await fetch('/api/auth/me', {
+            const response = await fetch('http://localhost:5000/api/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Show profile content
             if (profileContent) profileContent.style.display = 'block';
         } catch (error) {
+            console.error('Profile fetch error:', error);
             window.location.href = '/login';
         }
     }
@@ -167,13 +168,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderUserInfo = () => {
         if (!currentUser || !userInfoContainer) return;
 
+        const fullName = currentUser.firstName + (currentUser.lastName ? ' ' + currentUser.lastName : '');
+
         userInfoContainer.innerHTML = `
             <div class="user-info-card">
                 <div class="user-avatar">
                     <i class="fas fa-user-circle fa-3x"></i>
                 </div>
                 <div class="user-details">
-                    <h4>${currentUser.name}</h4>
+                    <h4>${fullName}</h4>
                     <p class="text-muted">${currentUser.email}</p>
                     <p class="text-muted">Member since ${new Date(currentUser.createdAt).toLocaleDateString()}</p>
                 </div>
@@ -182,10 +185,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Populate form fields
         if (profileForm) {
-            profileForm.querySelector('[name="name"]').value = currentUser.name || '';
-            profileForm.querySelector('[name="email"]').value = currentUser.email || '';
-            profileForm.querySelector('[name="phone"]').value = currentUser.phone || '';
-            profileForm.querySelector('[name="address"]').value = currentUser.address || '';
+            const nameField = profileForm.querySelector('[name="name"]');
+            if (nameField) nameField.value = fullName || '';
+            const emailField = profileForm.querySelector('[name="email"]');
+            if (emailField) emailField.value = currentUser.email || '';
+            const phoneField = profileForm.querySelector('[name="phone"]');
+            if (phoneField) phoneField.value = currentUser.phone || '';
+            const addressField = profileForm.querySelector('[name="address"]');
+            if (addressField) addressField.value = currentUser.address || '';
         }
     };
 

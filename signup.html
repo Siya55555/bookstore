@@ -43,8 +43,12 @@
             <div id="error-message" class="alert alert-danger" style="display: none;"></div>
             <form id="signup-form" novalidate>
                 <div class="mb-3">
-                    <label for="name" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="name" required>
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="firstName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" required>
                 </div>
                 <div class="mb-3">
                     <label for="email" class="form-label">Email Address</label>
@@ -55,10 +59,14 @@
                     <input type="password" class="form-control" id="password" required minlength="6">
                 </div>
                 <div class="mb-3">
-                    <label for="confirm-password" class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" id="confirm-password" required>
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirmPassword" required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number (Optional)</label>
+                    <input type="tel" class="form-control" id="phone">
+                </div>
+                <button type="submit" class="btn btn-primary w-100" id="signup-btn">
                     <span id="loader" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
                     Sign Up
                 </button>

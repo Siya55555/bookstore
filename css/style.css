@@ -302,6 +302,9 @@ a:hover {
 }
 
 .book-card-actions {
+    display: flex !important;
+    align-items: center !important;
+    flex-direction: row !important;
     gap: 6px;
     margin-top: auto;
 }
@@ -309,6 +312,14 @@ a:hover {
 .book-card-actions .btn {
     font-size: 0.85rem;
     padding: 6px 10px;
+}
+
+.book-card-actions .add-to-wishlist-btn {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 /* Blog Page */
@@ -439,7 +450,7 @@ a:hover {
 }
 
 .shop-rating-stars {
-    color: #ffc107;
+    color: #ffc107 !important;
     font-size: 0.9rem;
 }
 
@@ -456,7 +467,9 @@ a:hover {
 }
 
 .shop-book-card-actions {
-    display: flex;
+    display: flex !important;
+    align-items: center !important;
+    flex-direction: row !important;
     gap: 8px;
     padding: 0.5rem 1.2rem 0.7rem 1.2rem;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
@@ -475,10 +488,12 @@ a:hover {
 }
 
 .shop-book-card-actions .btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border: none;
-    color: white;
-    box-shadow: var(--shadow);
+    flex: 0 0 auto !important;
+    width: 80px !important;
+    min-width: 0 !important;
+    max-width: 100px !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
 }
 
 .shop-book-card-actions .btn-primary:hover {
@@ -507,11 +522,12 @@ a:hover {
     transition: all 0.3s ease;
 }
 
-.shop-book-card-actions .btn-outline-danger:hover {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: white;
-    transform: scale(1.1);
+.shop-book-card-actions .btn-outline-danger:hover,
+.shop-book-card-actions .btn-outline-danger:focus {
+    background: transparent !important;
+    /* border-color: #e94e77 !important;
+    color: #e94e77 !important; */
+    box-shadow: none !important;
 }
 
 .shop-book-card-actions .btn-outline-danger .fas {
@@ -528,6 +544,14 @@ a:hover {
 
 .shop-book-card-actions .btn-outline-danger:hover .far {
     color: white;
+}
+
+.shop-book-card-actions .add-to-wishlist-btn {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 /* Shop Page Specific Styles */
@@ -1015,6 +1039,171 @@ a:hover {
     }
 }
 
+@media (max-width: 600px) {
+    .hero-section {
+        padding: 2rem 1rem !important;
+        min-height: 250px !important;
+        text-align: center;
+    }
+    .hero-section h1,
+    .hero-section .main-title {
+        font-size: 2rem !important;
+    }
+    .hero-section p,
+    .hero-section .lead {
+        font-size: 1rem !important;
+    }
+    .hero-section .btn {
+        font-size: 1rem !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+    #shop-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.4rem !important;
+    }
+    .shop-book-card,
+    .shop-book-card-body,
+    .shop-book-card > a,
+    .shop-book-card > a > .shop-book-card-body {
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
+    .shop-book-card {
+        width: 98% !important;
+        max-width: 190px !important;
+        min-width: 0 !important;
+        /* margin: 0 auto !important; */
+        padding: 0.2rem 0 0.2rem 0 !important;
+        font-size: 0.75rem !important;
+        height: 220px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+    }
+    .shop-book-card-actions {
+        margin-top: auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: start !important;
+        gap: 0.9rem !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    .shop-book-card-actions .btn {
+        margin-left: 0 !important;
+        margin-right: auto !important;
+    }
+    .shop-book-card-actions .btn,
+    .shop-book-card-actions .btn-outline-danger {
+        font-size: 0.75rem !important;
+        padding: 0.3rem 0.5rem !important;
+        width: 90px !important;
+        min-width: unset !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+    .shop-book-card-actions .btn-outline-danger {
+        width: 36px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 0.3rem !important;
+    }
+    .shop-book-card-img {
+        height: 60px !important;
+        object-fit: cover !important;
+        margin-bottom: 0rem !important;
+        padding-top: 0 !important;
+    }
+    .shop-book-card-title {
+        font-size: 0.85rem !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        padding-left: 0.9rem !important;
+        margin-bottom: 0.05rem !important;
+        line-height: 1.1 !important;
+    }
+    .shop-book-card-author {
+        font-size: 0.7rem !important;
+        margin-bottom: 0.05rem !important;
+        padding-left: 0.9rem !important;
+        line-height: 1.1 !important;
+    }
+    .shop-book-card-price, .price-display, .current-price, .original-price, .discount-badge {
+        font-size: 0.8rem !important;
+        margin-bottom: 0.05rem !important;
+        line-height: 1.1 !important;
+        padding-left: 0.9rem !important;
+    }
+    .shop-book-rating, .shop-rating-stars {
+        padding-left: 0.8rem !important;
+    }
+    .footer-main, .footer-main * {
+        font-size: 0.85rem !important;
+    }
+    #featured-books-grid .book-card,
+    .row .book-card {
+        height: 300px !important;
+        min-height: 0 !important;
+        max-height: 280px !important;
+    }
+    #featured-books-grid .book-card img,
+    .row .book-card img {
+        height: 70px !important;
+        min-height: 0 !important;
+        max-height: 80px !important;
+    }
+    #featured-books-grid .book-card-body,
+    .row .book-card-body {
+        padding: 0.5rem 0.7rem 0.4rem 0.7rem !important;
+    }
+    .blog-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.7rem !important;
+    }
+    .blog-grid .card.h-100 {
+        height: 280px !important;
+        max-height: 280px !important;
+        min-height: 0 !important;
+        font-size: 0.85rem !important;
+        padding: 0.3rem 0.2rem !important;
+        width: 180px !important;
+        min-width: 0 !important;
+        max-width: 180px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    .blog-grid .card-img-top {
+        height: 180px !important;
+        max-height: 180px !important;
+        min-height: 0 !important;
+        object-fit: cover !important;
+        padding: 0 !important;
+    }
+    .blog-grid .card-title {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+    .blog-grid .card-text {
+        font-size: 0.75rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+    .blog-grid .card-text a {
+        font-size: 0.8rem !important;
+    }
+    .blog-grid .card-text + .d-flex small.text-muted {
+        display: none !important;
+    }
+}
+
 /* Additional Utility Classes */
 .text-gradient {
     background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
@@ -1282,4 +1471,208 @@ a:hover {
 
 .hidden { display: none !important; }
 
-.body-hidden { opacity: 0 !important; pointer-events: none !important; } 
+.body-hidden { opacity: 0 !important; pointer-events: none !important; }
+
+.fa-heart.fas {
+  color: #e94e77 !important;
+}
+.fa-heart.far {
+  color: inherit !important;
+}
+.fa-heart:hover {
+  color: inherit !important;
+}
+
+/* Hamburger Menu Styles */
+.hamburger-menu {
+  display: none; /* Hidden by default, shown on mobile */
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  z-index: 1200;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+}
+.hamburger-menu .bar {
+  display: block;
+  width: 28px;
+  height: 4px;
+  margin: 5px auto;
+  background-color: #232f3e;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+@media (max-width: 991.98px) {
+  .hamburger-menu {
+    display: flex;
+  }
+}
+
+@media (max-width: 600px) {
+  #featured-books-grid.row, .row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.7rem !important;
+  }
+  #featured-books-grid .col-lg-3, #featured-books-grid .col-md-4, #featured-books-grid .col-sm-6,
+  .row .col-lg-3, .row .col-md-4, .row .col-sm-6 {
+    max-width: 100% !important;
+    flex: 1 1 48% !important;
+  }
+}
+
+.blog-grid .card-text a {
+  color: #e94e77 !important;
+}
+
+/* Blog Detail Page Specific Styles */
+.blog-detail-container .card {
+  max-width: 700px;
+  margin: 2rem auto;
+  box-shadow: 0 4px 24px rgba(233, 78, 119, 0.08), 0 1.5px 6px rgba(0,0,0,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.blog-detail-container .card-img-top {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 16px 16px 0 0;
+}
+
+.blog-detail-container .card-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.blog-detail-container .text-muted {
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.blog-detail-container .card-text {
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .blog-detail-container .card {
+    max-width: 98vw;
+    margin: 1rem auto;
+  }
+  .blog-detail-container .card-img-top {
+    height: 180px;
+    border-radius: 12px 12px 0 0;
+  }
+  .blog-detail-container .card-title {
+    font-size: 1.2rem;
+  }
+  .blog-detail-container .card-text {
+    font-size: 0.98rem;
+  }
+}
+
+.rating-stars,
+.shop-rating-stars,
+.book-rating .rating-stars,
+.book-card .rating-stars,
+.related-books .rating-stars {
+  color: #ffc107 !important;
+}
+
+.add-to-wishlist-btn .fa-heart {
+  font-size: 1.5em !important;
+}
+
+.featured-books .book-card-actions {
+  display: flex !important;
+  align-items: center !important;
+  flex-direction: row !important;
+}
+
+/* Pink Place Order button override */
+#place-order-btn {
+    background: linear-gradient(135deg, #e94e77, #ff6b9d) !important;
+    border: none !important;
+    color: #fff !important;
+}
+#place-order-btn:hover, #place-order-btn:focus {
+    background: linear-gradient(135deg, #ff6b9d, #e94e77) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 25px rgba(233, 78, 119, 0.15);
+}
+
+/* Modern checkout layout improvements */
+.checkout-modern.container {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 32px;
+    padding-right: 32px;
+}
+.checkout-modern .row {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+.order-summary-sidebar {
+    margin-left: auto;
+}
+@media (max-width: 991.98px) {
+    .checkout-modern.container {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    .checkout-modern .row {
+        justify-content: flex-start;
+    }
+    .order-summary-sidebar {
+        margin-left: 0;
+    }
+}
+
+/* Wider Shipping Address box on desktop */
+@media (min-width: 992px) {
+  .checkout-modern .col-lg-7 > .card:first-child {
+    min-width: 800px;
+    max-width: 650px;
+    width: 100%;
+  }
+  .order-summary-sidebar {
+    position: fixed !important;
+    right: 40px;
+    top: 80px;
+    width: 370px;
+    max-width: 100%;
+    z-index: 100;
+  }
+  .checkout-modern .col-lg-7 {
+    margin-right: 420px; /* leave space for fixed sidebar */
+  }
+  /* Wider Shipping Address, Items, Payment, and Coupon boxes */
+  .checkout-modern .col-lg-7 > .card {
+    min-width: 480px;
+    max-width: 650px;
+    width: 100%;
+  }
+}
+@media (max-width: 991.98px) {
+  .order-summary-sidebar {
+    position: static !important;
+    width: 100%;
+    margin-right: 0;
+  }
+  .checkout-modern .col-lg-7 {
+    margin-right: 0;
+  }
+} 

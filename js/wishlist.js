@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const wishlistContainer = document.getElementById('wishlist-container');
     const emptyWishlistMessage = document.getElementById('empty-wishlist-message');
+    const wishlistCountBadge = document.getElementById('wishlist-count');
 
     let wishlistItems = [];
 
@@ -37,21 +38,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             if (!token) {
                 showEmptyWishlist();
+                localStorage.setItem('wishlist', JSON.stringify([]));
                 return;
             }
 
             const response = await apiCall('/wishlist');
             wishlistItems = response.data || [];
+            localStorage.setItem('wishlist', JSON.stringify(wishlistItems.map(item => item.book._id)));
             renderWishlist();
         } catch (error) {
             console.error('Failed to load wishlist:', error);
             showEmptyWishlist();
+            localStorage.setItem('wishlist', JSON.stringify([]));
         }
     };
 
     const renderWishlist = () => {
         if (wishlistItems.length === 0) {
             showEmptyWishlist();
+            updateWishlistCount();
             return;
         }
 
@@ -95,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         document.getElementById('main-content').classList.remove('hidden');
         document.body.classList.remove('body-hidden');
+        updateWishlistCount();
     };
 
     const showEmptyWishlist = () => {
@@ -106,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         document.getElementById('main-content').classList.remove('hidden');
         document.body.classList.remove('body-hidden');
+        updateWishlistCount();
     };
 
     const addToCart = async (bookId) => {
@@ -119,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             showToast('Failed to add to cart', 'error');
         }
+        updateWishlistCount();
     };
 
     const removeFromWishlist = async (bookId) => {
@@ -126,11 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
             await apiCall(`/wishlist/${bookId}`, { method: 'DELETE' });
             
             wishlistItems = wishlistItems.filter(item => item.book._id !== bookId);
+            localStorage.setItem('wishlist', JSON.stringify(wishlistItems.map(item => item.book._id)));
             renderWishlist();
             showToast('Removed from wishlist', 'success');
         } catch (error) {
             showToast('Failed to remove from wishlist', 'error');
         }
+        updateWishlistCount();
     };
 
     const getStarRating = (rating) => {
@@ -158,7 +168,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
+    // Update the wishlist count badge in the header
+    const updateWishlistCount = () => {
+        if (wishlistCountBadge) {
+            wishlistCountBadge.textContent = wishlistItems.length;
+        }
+    };
+
     // --- Event Listeners ---
+
+    // Add event listener for 'Continue Shopping' button
+    const continueShoppingBtn = document.getElementById('continue-shopping-btn');
+    if (continueShoppingBtn) {
+        continueShoppingBtn.addEventListener('click', () => {
+            window.location.href = '/';
+        });
+    }
 
     document.body.addEventListener('click', async (e) => {
         const wishlistItem = e.target.closest('.wishlist-item');
@@ -177,4 +202,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize
     loadWishlist();
+    updateWishlistCount();
 }); 

@@ -102,8 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 stockStatus = '<span class="stock-status stock-out">Out of Stock</span>';
             } else if (book.stockQuantity <= 5) {
                 stockStatus = '<span class="stock-status stock-low">Low Stock</span>';
-            } else {
-                stockStatus = '<span class="stock-status stock-in">In Stock</span>';
             }
 
             // Calculate discount if original price exists
@@ -136,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <p class="shop-book-card-author">by ${book.author}</p>
                                 <div class="shop-book-rating">
                                     <span class="shop-rating-stars">${getStarRating(book.averageRating)}</span>
-                                    <span class="shop-rating-text">(${book.totalReviews} reviews)</span>
                                 </div>
                                 ${priceDisplay}
                             </div>
@@ -144,8 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </a>
                     <div class="shop-book-card-actions">
                         <button class="btn btn-primary btn-sm add-to-cart-btn" ${book.stockQuantity === 0 ? 'disabled' : ''}>
-                            <i class="fas fa-shopping-cart me-1"></i>
-                            ${book.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                            Add to Cart
                         </button>
                         <button class="btn btn-outline-danger btn-sm add-to-wishlist-btn">
                             <i class="${heartIcon} fa-heart"></i>
@@ -392,13 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
             const index = wishlist.indexOf(bookId);
-            
             if (index > -1) {
                 // Remove from wishlist
                 await apiCall(`/wishlist/${bookId}`, { method: 'DELETE' });
                 wishlist.splice(index, 1);
-                if(heartIcon) heartIcon.classList.replace('fas', 'far');
-                showToast('Removed from wishlist 💔', 'info');
+                if (heartIcon) {
+                    heartIcon.classList.replace('fas', 'far');
+                    heartIcon.style.color = '';
+                    showToast('Removed from wishlist 💔', 'info');
+                }
             } else {
                 // Add to wishlist
                 await apiCall('/wishlist/add', {
@@ -406,11 +404,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ bookId })
                 });
                 wishlist.push(bookId);
-                if(heartIcon) heartIcon.classList.replace('far', 'fas');
-                showToast('Added to wishlist! ❤️', 'success');
+                if (heartIcon) {
+                    heartIcon.classList.replace('far', 'fas');
+                    heartIcon.style.color = '#e94e77'; // Pink color
+                    showToast('Added to wishlist 💖', 'info');
+                }
             }
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
-            
             // Update wishlist count in header
             const wishlistCount = document.getElementById('wishlist-count');
             if (wishlistCount) {

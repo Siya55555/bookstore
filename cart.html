@@ -26,7 +26,12 @@
     <header class="header-main">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand" href="/"><i class="fas fa-book-open"></i> Bookworld India</a>
+                <a class="navbar-brand" href="/">
+                    <i class="fas fa-book-open"></i> Bookworld India
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
                         <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
@@ -36,13 +41,27 @@
                         <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
                     </ul>
                     <div class="navbar-icons">
-                        <a href="/wishlist" class="position-relative"><i class="fas fa-heart"></i><span class="badge bg-danger icon-badge" id="wishlist-count">0</span></a>
-                        <a href="/cart" class="position-relative"><i class="fas fa-shopping-cart"></i><span class="badge bg-danger icon-badge" id="cart-count">0</span></a>
+                        <a href="#" class="search-icon"><i class="fas fa-search"></i></a>
+                        <a href="/wishlist" class="position-relative">
+                            <i class="fas fa-heart"></i>
+                            <span class="badge bg-danger icon-badge" id="wishlist-count">0</span>
+                        </a>
+                        <a href="/cart" class="position-relative">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="badge bg-danger icon-badge" id="cart-count">0</span>
+                        </a>
                         <a href="/profile"><i class="fas fa-user-circle"></i></a>
                     </div>
                 </div>
             </div>
         </nav>
+        <!-- Search Bar (hidden by default) -->
+        <div class="search-bar-container container" style="display: none;">
+            <div class="input-group my-2">
+                <input type="text" id="search-input" class="form-control" placeholder="Search for books...">
+                <button class="btn btn-primary" id="search-button">Search</button>
+            </div>
+        </div>
     </header>
 
     <main class="container py-5 hidden" id="main-content">
@@ -55,7 +74,7 @@
         </div>
         <div class="row">
             <div class="col-lg-8">
-                <div id="cart-items-container">
+                <div id="cart-items">
                     <!-- Cart items will be injected here by JS -->
                 </div>
             </div>
@@ -77,7 +96,7 @@
                                 <span id="cart-total">₹50.00</span>
                             </li>
                         </ul>
-                        <a href="/checkout.html" class="btn btn-primary w-100 mt-3" id="checkout-btn">Proceed to Checkout</a>
+                        <a href="/checkout" class="btn btn-primary w-100 mt-3" id="checkout-btn">Proceed to Checkout</a>
                     </div>
                 </div>
             </div>
@@ -88,10 +107,6 @@
     <footer class="footer-main bg-dark text-white pt-5 pb-2 mt-5">
         <div class="container">
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <h5 class="text-white">About Bookworld India</h5>
-                    <p>Your one-stop shop for all the books you love. We are passionate about reading and committed to bringing you the best books from around the world.</p>
-                </div>
                 <div class="col-md-2 mb-3">
                     <h5 class="text-white">Quick Links</h5>
                     <ul class="list-unstyled">

@@ -103,18 +103,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (index > -1) {
                 await apiCall(`/wishlist/${bookId}`, { method: 'DELETE' });
                 wishlist.splice(index, 1);
-                if (heartIcon) heartIcon.classList.replace('fas', 'far');
+                if (heartIcon) {
+                    heartIcon.classList.replace('fas', 'far');
+                    heartIcon.style.color = '';
+                }
                 updateWishlistCount(-1);
-                showToast('Removed from wishlist 💔', 'info');
             } else {
                 await apiCall('/wishlist/add', {
                     method: 'POST',
                     body: JSON.stringify({ bookId })
                 });
                 wishlist.push(bookId);
-                if (heartIcon) heartIcon.classList.replace('far', 'fas');
+                if (heartIcon) {
+                    heartIcon.classList.replace('far', 'fas');
+                    heartIcon.style.color = '#e94e77'; // Pink color
+                }
                 updateWishlistCount(1);
-                showToast('Added to wishlist! ❤️', 'success');
             }
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
         } catch (error) {
@@ -186,6 +190,66 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.remove('body-hidden');
     };
 
+    const renderRelatedBooks = (books, currentBookId) => {
+        const grid = document.getElementById('related-books-grid');
+        if (!grid) return;
+        if (!books.length) {
+            grid.innerHTML = '<div class="col-12 text-center text-muted">No related books found.</div>';
+            return;
+        }
+        // Get wishlist from localStorage
+        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        grid.innerHTML = books
+            .filter(book => book._id !== currentBookId)
+            .slice(0, 4)
+            .map(book => {
+                const isInWishlist = wishlist.includes(book._id);
+                const heartIcon = isInWishlist ? 'fas' : 'far';
+                const heartStyle = isInWishlist ? 'style="color: #e94e77;"' : '';
+                return `
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="book-card" data-id="${book._id}">
+                        <a href="/book.html?id=${book._id}">
+                            <img src="${book.coverImage}" alt="${book.title}" class="book-card-img">
+                            <div class="book-card-body">
+                                <h5 class="book-card-title">${book.title}</h5>
+                                <p class="book-card-author">by ${book.author}</p>
+                                <div class="book-rating">
+                                    <span class="rating-stars">${getStarRating(book.averageRating)}</span>
+                                </div>
+                                <p class="book-card-price">₹${book.price}</p>
+                            </div>
+                        </a>
+                        <div class="book-card-actions d-flex justify-content-between align-items-center mt-2">
+                            <button class="btn btn-primary btn-sm add-to-cart-btn" data-id="${book._id}">Add to Cart</button>
+                            <button class="btn btn-outline-danger btn-sm add-to-wishlist-btn" data-id="${book._id}">
+                                <i class="${heartIcon} fa-heart" ${heartStyle}></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        // Add event listeners for Add to Cart and Wishlist in related books
+        grid.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const bookId = btn.getAttribute('data-id');
+                await addToCart(bookId);
+            });
+        });
+        grid.querySelectorAll('.add-to-wishlist-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const bookId = btn.getAttribute('data-id');
+                const heartIcon = btn.querySelector('i');
+                await toggleWishlist(bookId, heartIcon);
+            });
+        });
+    };
+
     // --- Page Initialization ---
     const bookId = getBookIdFromURL();
     
@@ -197,6 +261,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const book = response.data.book;
                 if (book) {
                     renderBookDetails(book);
+                    // Fetch related books by category, excluding the current book
+                    apiCall(`/books?category=${book.category}`)
+                        .then(relatedRes => {
+                            const relatedBooks = relatedRes.data.books || [];
+                            renderRelatedBooks(relatedBooks, book._id);
+                        })
+                        .catch(() => {
+                            renderRelatedBooks([], book._id);
+                        });
                 } else {
                     displayNotFound();
                 }

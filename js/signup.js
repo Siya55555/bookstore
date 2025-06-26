@@ -139,12 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             showToast('Account created successfully! Redirecting...', 'success');
 
-            // Redirect to home or intended page
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirect = urlParams.get('redirect') || '/';
-            
+            // Redirect to profile page
             setTimeout(() => {
-                window.location.href = redirect;
+                window.location.href = '/profile';
             }, 1500);
 
         } catch (error) {

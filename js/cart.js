@@ -1,11 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Configuration ---
-    const API_BASE_URL = 'https://your-backend.onrender.com/api';
+    const API_BASE_URL = 'http://localhost:5000/api';
 
     const cartItemsContainer = document.getElementById('cart-items');
     const cartSummary = document.getElementById('cart-summary');
     const emptyCartMessage = document.getElementById('empty-cart-message');
+    const cartCountBadge = document.getElementById('cart-count');
 
     let cartItems = [];
 
@@ -38,21 +39,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             if (!token) {
                 showEmptyCart();
+                localStorage.setItem('cart', JSON.stringify([]));
                 return;
             }
 
             const response = await apiCall('/cart');
-            cartItems = response.data || [];
+            cartItems = (response.data && response.data.items) ? response.data.items : [];
+            localStorage.setItem('cart', JSON.stringify(cartItems.map(item => ({ id: item.book._id, quantity: item.quantity }))));
             renderCart();
         } catch (error) {
             console.error('Failed to load cart:', error);
             showEmptyCart();
+            localStorage.setItem('cart', JSON.stringify([]));
         }
     };
 
     const renderCart = () => {
+        console.log('Rendering cart items:', cartItems);
         if (cartItems.length === 0) {
             showEmptyCart();
+            updateCartCount();
             return;
         }
 
@@ -96,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update cart summary
         updateCartSummary();
+        updateCartCount();
         document.getElementById('main-content').classList.remove('hidden');
         document.body.classList.remove('body-hidden');
     };
@@ -112,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         document.getElementById('main-content').classList.remove('hidden');
         document.body.classList.remove('body-hidden');
+        updateCartCount();
     };
 
     const updateCartSummary = () => {
@@ -167,7 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             item.quantity = newQuantity;
+            localStorage.setItem('cart', JSON.stringify(cartItems.map(item => ({ id: item.book._id, quantity: item.quantity }))));
             renderCart();
+            updateCartCount();
             showToast('Cart updated successfully!', 'success');
         } catch (error) {
             showToast('Failed to update cart', 'error');
@@ -179,7 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
             await apiCall(`/cart/${bookId}`, { method: 'DELETE' });
             
             cartItems = cartItems.filter(item => item.book._id !== bookId);
+            localStorage.setItem('cart', JSON.stringify(cartItems.map(item => ({ id: item.book._id, quantity: item.quantity }))));
             renderCart();
+            updateCartCount();
             showToast('Item removed from cart', 'success');
         } catch (error) {
             showToast('Failed to remove item', 'error');
@@ -203,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Clear cart
             cartItems = [];
+            localStorage.setItem('cart', JSON.stringify([]));
             renderCart();
             
             // Redirect to order confirmation
@@ -257,6 +270,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Update the cart count badge in the header
+    const updateCartCount = () => {
+        if (cartCountBadge) {
+            const count = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+            cartCountBadge.textContent = count;
+        }
+    };
+
     // Initialize
     loadCart();
+    updateCartCount();
 }); 

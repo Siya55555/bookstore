@@ -94,12 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             showToast('Login successful! Redirecting...', 'success');
 
-            // Redirect to intended page or home
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirect = urlParams.get('redirect') || '/';
-            
+            // Redirect to profile page
             setTimeout(() => {
-                window.location.href = redirect;
+                window.location.href = '/profile';
             }, 1500);
 
         } catch (error) {
