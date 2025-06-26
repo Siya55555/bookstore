@@ -80,20 +80,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Coupon logic (mock)
-    applyCouponBtn.addEventListener('click', (e) => {
+    applyCouponBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         const code = couponInput.value.trim().toUpperCase();
-        // Mock: only one valid coupon
-        if (code === 'BOOK10') {
-            coupon = { code, discount: 100 };
-            couponMessage.textContent = 'Coupon applied! ₹100 off.';
+        
+        if (!code) {
+            couponMessage.textContent = 'Please enter a coupon code.';
             couponMessage.style.display = 'block';
-        } else {
-            coupon = { code: '', discount: 0 };
-            couponMessage.textContent = 'Invalid coupon code.';
-            couponMessage.style.display = 'block';
-            couponMessage.classList.add('text-danger');
+            couponMessage.className = 'mt-2 text-danger';
+            return;
         }
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                couponMessage.textContent = 'Please login to apply coupons.';
+                couponMessage.style.display = 'block';
+                couponMessage.className = 'mt-2 text-danger';
+                return;
+            }
+
+            // Calculate subtotal for coupon validation
+            let subtotal = 0;
+            cartItems.forEach(item => {
+                subtotal += item.price * item.quantity;
+            });
+
+            const response = await fetch('/api/coupons/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    code: code,
+                    subtotal: subtotal
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                coupon = { 
+                    code: code, 
+                    discount: data.data.discountAmount,
+                    type: data.data.type,
+                    percentage: data.data.percentage
+                };
+                couponMessage.textContent = `Coupon applied! ${data.data.type === 'percentage' ? `${data.data.percentage}% off` : `₹${data.data.discountAmount} off`}.`;
+                couponMessage.style.display = 'block';
+                couponMessage.className = 'mt-2 text-success';
+            } else {
+                coupon = { code: '', discount: 0 };
+                couponMessage.textContent = data.message || 'Invalid coupon code.';
+                couponMessage.style.display = 'block';
+                couponMessage.className = 'mt-2 text-danger';
+            }
+        } catch (error) {
+            console.error('Error applying coupon:', error);
+            coupon = { code: '', discount: 0 };
+            couponMessage.textContent = 'Failed to apply coupon. Please try again.';
+            couponMessage.style.display = 'block';
+            couponMessage.className = 'mt-2 text-danger';
+        }
+        
         renderSummary();
     });
 

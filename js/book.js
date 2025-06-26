@@ -254,6 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookId = getBookIdFromURL();
     
     if (bookId) {
+        // Set book ID for reviews manager
+        window.currentBookId = bookId;
+        
         // Fetch book details from API
         apiCall(`/books/${bookId}`)
             .then(response => {
