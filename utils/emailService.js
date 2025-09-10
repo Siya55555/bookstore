@@ -334,4 +334,4 @@ const sendWelcomeEmail = async (email, userName) => {
 module.exports = {
   sendPasswordResetEmail,
   sendWelcomeEmail
-}; 
+};
