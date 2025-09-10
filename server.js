@@ -109,11 +109,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
+const orderAdminRoutes = require('./routes/order-admin');
+app.use('/api/order-admin', orderAdminRoutes);
+const affiliateRoutes = require('./routes/affiliate');
+app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
+// Register admin API route
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
 
 // Serve HTML pages
 app.get('/', (req, res) => {
@@ -170,6 +177,21 @@ app.get('/order-success.html', (req, res) => {
 
 app.get('/view-orders.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'view-orders.html'));
+});
+
+// Serve affiliate dashboard
+app.get('/affiliate', (req, res) => {
+  res.sendFile(path.join(__dirname, 'affiliate.html'));
+});
+
+// Serve admin order management page
+app.get('/admin-orders', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-orders.html'));
+});
+
+// Serve admin panel HTML
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 console.log('Registering /checkout.html route');
