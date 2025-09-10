@@ -103,6 +103,18 @@ router.post('/create', protect, async (req, res) => {
         await order.save();
         await order.populate('items.book');
 
+        // Track affiliate if present
+        if (affiliateCode) {
+            const User = require('../models/User');
+            const affiliate = await User.findOne({ 'affiliate.code': affiliateCode });
+            if (affiliate && affiliate.affiliate && affiliate.affiliate.isActive) {
+                affiliate.affiliate.referredOrders.push(order._id);
+                const commission = (affiliate.affiliate.commissionRate || 0.05) * order.total;
+                affiliate.affiliate.totalEarnings += commission;
+                await affiliate.save();
+            }
+        }
+
         // Clear user's cart
         await Cart.findOneAndUpdate(
             { user: req.user.id },
