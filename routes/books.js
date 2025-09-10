@@ -436,10 +436,17 @@ router.put('/:id', protect, adminOnly, [
     }
   }
 
+  const prevStock = book.stockQuantity;
   book = await Book.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   });
+
+  // Notify users if restocked
+  if (typeof req.body.stockQuantity !== 'undefined' && prevStock === 0 && book.stockQuantity > 0) {
+    const notifyRestock = require('../utils/notifyRestock');
+    notifyRestock(book);
+  }
 
   res.status(200).json({
     success: true,
