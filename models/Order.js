@@ -39,6 +39,27 @@ const orderItemSchema = new mongoose.Schema({
     default: 0
   }
 }, {
+  // Partial fulfillment fields
+  status: {
+    type: String,
+    enum: ['pending', 'fulfilled', 'refunded', 'cancelled'],
+    default: 'pending'
+  },
+  refundAmount: {
+    type: Number,
+    min: [0, 'Refund amount cannot be negative'],
+    default: 0
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'refunded', 'requested'],
+    default: 'pending'
+  },
+  extraPaymentRequested: {
+    type: Number,
+    min: [0, 'Extra payment cannot be negative'],
+    default: 0
+  },
   timestamps: false,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
@@ -438,4 +459,4 @@ orderSchema.statics.getStats = async function() {
   };
 };
 
-module.exports = mongoose.model('Order', orderSchema); 
+module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);
